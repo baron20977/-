@@ -1,0 +1,26 @@
+{
+  "name": "منشئ الأسئلة الامتحانية العراقية - إعداد الأستاذ بشير",
+  "short_name": "منشئ الأسئلة",
+  "description": "أداة إنشاء وطباعة الأسئلة الامتحانية العراقية (أول متوسط - سادس إعدادي) تعمل بدون إنترنت.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "dir": "rtl",
+  "lang": "ar",
+  "background_color": "#f1f5f9",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='36' fill='%230d9488'/%3E%3Cpath d='M56 44h52l28 28v76a12 12 0 0 1-12 12H56a12 12 0 0 1-12-12V56a12 12 0 0 1 12-12z' fill='none' stroke='%23ffffff' stroke-width='10' stroke-linejoin='round'/%3E%3Cpath d='M68 92h56M68 118h56M68 144h36' stroke='%23ffffff' stroke-width='10' stroke-linecap='round'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='36' fill='%230d9488'/%3E%3Cpath d='M56 44h52l28 28v76a12 12 0 0 1-12 12H56a12 12 0 0 1-12-12V56a12 12 0 0 1 12-12z' fill='none' stroke='%23ffffff' stroke-width='10' stroke-linejoin='round'/%3E%3Cpath d='M68 92h56M68 118h56M68 144h36' stroke='%23ffffff' stroke-width='10' stroke-linecap='round'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

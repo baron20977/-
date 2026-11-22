@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>منشئ الأسئلة الامتحانية العراقية - إعداد الأستاذ بشير</title>
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="منشئ الأسئلة">
 
     <!-- خطوط عربية وإنكليزية واضحة ورسمية للطباعة -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -167,6 +172,24 @@
             letter-spacing: -1px;
         }
 
+
+        /* التعديل المباشر على ورقة المعاينة */
+        .inline-edit {
+            border-radius: 4px;
+            transition: background-color 0.15s ease, outline-color 0.15s ease;
+            cursor: text;
+        }
+        .inline-edit:hover {
+            background-color: rgba(13, 148, 136, 0.08);
+            outline: 1px dashed rgba(13, 148, 136, 0.55);
+            outline-offset: 2px;
+        }
+        .inline-edit:focus {
+            background-color: rgba(204, 251, 241, 0.45);
+            outline: 1.5px solid #0d9488;
+            outline-offset: 2px;
+        }
+
         @keyframes toastFadeIn {
             from { opacity: 0; transform: translate(-50%, 14px); }
             to { opacity: 1; transform: translate(-50%, 0); }
@@ -226,6 +249,8 @@
                 margin: 0 !important;
                 padding: 0 !important;
             }
+
+            .inline-edit { outline: none !important; background: transparent !important; }
 
             #exam-sheet {
                 transform: none !important;
@@ -533,7 +558,10 @@
         <!-- ==================== 2. لوحة المعاينة الحية ==================== -->
         <section id="preview-panel" class="hidden lg:flex flex-1 h-full overflow-y-auto overflow-x-auto bg-slate-200/90 p-2 sm:p-5 flex-col items-center">
             <div class="no-print w-full max-w-[794px] flex flex-wrap items-center justify-between gap-2 mb-3 px-1">
-                <span class="text-xs font-bold text-slate-700">معاينة حية بمقاس الطباعة الحقيقي</span>
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-xs font-bold text-slate-700">معاينة حية بمقاس الطباعة الحقيقي</span>
+                    <span class="text-[11px] font-bold text-teal-800 bg-teal-50 border border-teal-200 px-2 py-0.5 rounded-lg">✏️ اضغط على أي نص للتعديل المباشر</span>
+                </div>
                 <div class="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-300 shadow-2xs">
                     <button type="button" onclick="adjustManualZoom(-0.1)"
                         class="w-7 h-7 rounded-lg hover:bg-slate-100 text-slate-700 font-extrabold text-sm flex items-center justify-center transition"
@@ -2237,12 +2265,13 @@
             }).join('');
         }
 
-        function renderPointsOnSheet(target, pointFontPx) {
+        function renderPointsOnSheet(target, pointFontPx, qId, brId) {
             const qType = target.qType || 'normal';
             const points = target.points || [];
             const en = isEnglish();
             const padCls = en ? 'pl-6' : 'pr-6';
             const letters = getLetters();
+            const brAttr = brId ? `data-br-id="${brId}"` : '';
 
             const valid = points.filter(p =>
                 (p.text && p.text.trim() !== '') ||
@@ -2256,7 +2285,7 @@
                     const lbl = getPointLabel(idx, target.pointsNumbering);
                     return `<span class="inline-flex items-baseline gap-1 ${marginCls} mb-1">
                         ${lbl ? `<span class="font-bold">${lbl}</span>` : ''}
-                        <span>${escapeHtml(p.text)}</span>
+                        <span class="inline-edit" contenteditable="true" data-edit-kind="point" data-q-id="${qId}" ${brAttr} data-pt-id="${p.id}">${escapeHtml(p.text)}</span>
                     </span>`;
                 }).join('');
                 return `<div class="${padCls} mt-1.5 flex flex-wrap items-baseline" style="font-size: ${pointFontPx}px;">${items}</div>`;
@@ -2266,23 +2295,23 @@
                 const rows = valid.map((p, idx) => {
                     const lbl = getPointLabel(idx, target.pointsNumbering);
                     const nonEmptyOpts = (p.options || [])
-                        .map((o, oi) => ({ letter: letters[oi] || fmtNum(oi + 1), text: (o || '').trim() }))
+                        .map((o, oi) => ({ oi, letter: letters[oi] || fmtNum(oi + 1), text: (o || '').trim() }))
                         .filter(o => o.text !== '');
 
                     const optsInline = nonEmptyOpts.length > 0
-                        ? ` <span class="font-semibold">( ${nonEmptyOpts.map(o => `${o.letter}- ${escapeHtml(o.text)}`).join(' &nbsp;&nbsp; ')} )</span>`
+                        ? ` <span class="font-semibold">( ${nonEmptyOpts.map(o => `${o.letter}- <span class="inline-edit" contenteditable="true" data-edit-kind="mcq-opt" data-q-id="${qId}" ${brAttr} data-pt-id="${p.id}" data-opt-idx="${o.oi}">${escapeHtml(o.text)}</span>`).join(' &nbsp;&nbsp; ')} )</span>`
                         : '';
 
                     const belowPad = en ? 'pl-5' : 'pr-5';
                     const optsBelow = nonEmptyOpts.length > 0
-                        ? `<div class="${belowPad} mt-0.5 flex flex-wrap gap-x-6 gap-y-0.5 font-semibold">${nonEmptyOpts.map(o => `<span>${o.letter}- ${escapeHtml(o.text)}</span>`).join('')}</div>`
+                        ? `<div class="${belowPad} mt-0.5 flex flex-wrap gap-x-6 gap-y-0.5 font-semibold">${nonEmptyOpts.map(o => `<span>${o.letter}- <span class="inline-edit" contenteditable="true" data-edit-kind="mcq-opt" data-q-id="${qId}" ${brAttr} data-pt-id="${p.id}" data-opt-idx="${o.oi}">${escapeHtml(o.text)}</span></span>`).join('')}</div>`
                         : '';
 
                     return `
                         <div class="mt-1.5">
                             <div class="flex items-start gap-2">
                                 ${lbl ? `<span class="font-bold shrink-0">${lbl}</span>` : ''}
-                                <div class="flex-1 whitespace-pre-wrap break-words">${escapeHtml(p.text)}${target.mcqDisplay !== 'below' ? optsInline : ''}</div>
+                                <div class="flex-1 whitespace-pre-wrap break-words"><span class="inline-edit" contenteditable="true" data-edit-kind="point" data-q-id="${qId}" ${brAttr} data-pt-id="${p.id}">${escapeHtml(p.text)}</span>${target.mcqDisplay !== 'below' ? optsInline : ''}</div>
                             </div>
                             ${target.mcqDisplay === 'below' ? optsBelow : ''}
                         </div>
@@ -2299,7 +2328,7 @@
                         <div class="flex items-start justify-between gap-4 mt-1.5">
                             <div class="flex items-start gap-2 flex-1">
                                 ${lbl ? `<span class="font-bold shrink-0">${lbl}</span>` : ''}
-                                <div class="flex-1 whitespace-pre-wrap break-words">${escapeHtml(p.text)}</div>
+                                <div class="flex-1 whitespace-pre-wrap break-words inline-edit" contenteditable="true" data-edit-kind="point" data-q-id="${qId}" ${brAttr} data-pt-id="${p.id}">${escapeHtml(p.text)}</div>
                             </div>
                             ${showBrackets ? `<div class="font-bold shrink-0 whitespace-nowrap select-none">( &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; )</div>` : ''}
                         </div>
@@ -2313,7 +2342,7 @@
                 return `
                     <div class="flex items-start gap-2 mt-1.5">
                         ${lbl ? `<span class="font-bold shrink-0">${lbl}</span>` : ''}
-                        <div class="flex-1 whitespace-pre-wrap break-words">${escapeHtml(p.text)}</div>
+                        <div class="flex-1 whitespace-pre-wrap break-words inline-edit" contenteditable="true" data-edit-kind="point" data-q-id="${qId}" ${brAttr} data-pt-id="${p.id}">${escapeHtml(p.text)}</div>
                     </div>
                 `;
             }).join('');
@@ -2397,20 +2426,20 @@
             const lblDat = en ? 'Date: ' : 'التاريخ: ';
 
             const startCol = [
-                h.adminTitle.trim() ? `<div class="font-bold">${escapeHtml(h.adminTitle)}</div>` : '',
-                h.school.trim() ? `<div class="font-bold">${escapeHtml(h.school)}</div>` : ''
+                h.adminTitle.trim() ? `<div class="font-bold inline-edit" contenteditable="true" data-edit-kind="header" data-field="adminTitle">${escapeHtml(h.adminTitle)}</div>` : '',
+                h.school.trim() ? `<div class="font-bold inline-edit" contenteditable="true" data-edit-kind="header" data-field="school">${escapeHtml(h.school)}</div>` : ''
             ].filter(Boolean).join('');
 
             const centerCol = [
-                h.examTitle.trim() ? `<div class="font-extrabold text-[1.06em]">${escapeHtml(h.examTitle)}</div>` : '',
-                h.academicYear.trim() ? `<div class="font-bold mt-0.5">${escapeHtml(fmtNum(h.academicYear))}</div>` : ''
+                h.examTitle.trim() ? `<div class="font-extrabold text-[1.06em] inline-edit" contenteditable="true" data-edit-kind="header" data-field="examTitle">${escapeHtml(h.examTitle)}</div>` : '',
+                h.academicYear.trim() ? `<div class="font-bold mt-0.5 inline-edit" contenteditable="true" data-edit-kind="header" data-field="academicYear">${escapeHtml(fmtNum(h.academicYear))}</div>` : ''
             ].filter(Boolean).join('');
 
             const endCol = [
-                h.subject.trim() ? `<div class="font-bold">${lblSub}${escapeHtml(h.subject)}</div>` : '',
-                h.grade.trim() ? `<div class="font-bold">${lblGrd}${escapeHtml(h.grade)}</div>` : '',
-                h.time.trim() ? `<div class="font-semibold">${lblTim}${escapeHtml(fmtNum(h.time))}</div>` : '',
-                h.date.trim() ? `<div class="font-semibold">${lblDat}${escapeHtml(fmtNum(h.date))}</div>` : ''
+                h.subject.trim() ? `<div class="font-bold">${lblSub}<span class="inline-edit" contenteditable="true" data-edit-kind="header" data-field="subject">${escapeHtml(h.subject)}</span></div>` : '',
+                h.grade.trim() ? `<div class="font-bold">${lblGrd}<span class="inline-edit" contenteditable="true" data-edit-kind="header" data-field="grade">${escapeHtml(h.grade)}</span></div>` : '',
+                h.time.trim() ? `<div class="font-semibold">${lblTim}<span class="inline-edit" contenteditable="true" data-edit-kind="header" data-field="time">${escapeHtml(fmtNum(h.time))}</span></div>` : '',
+                h.date.trim() ? `<div class="font-semibold">${lblDat}<span class="inline-edit" contenteditable="true" data-edit-kind="header" data-field="date">${escapeHtml(fmtNum(h.date))}</span></div>` : ''
             ].filter(Boolean).join('');
 
             const startAlign = en ? 'text-left' : 'text-right';
@@ -2424,7 +2453,7 @@
 
             const noteHtml = h.note.trim() ? `
                 <div class="text-center font-bold py-2" style="font-size: ${sz.point}px;">
-                    <span class="border-b border-black/70 pb-0.5 px-2">${escapeHtml(fmtNum(h.note))}</span>
+                    <span class="border-b border-black/70 pb-0.5 px-2 inline-edit" contenteditable="true" data-edit-kind="header" data-field="note">${escapeHtml(fmtNum(h.note))}</span>
                 </div>
             ` : '';
 
@@ -2447,7 +2476,7 @@
                         const letter = letters[bIdx] || fmtNum(bIdx + 1);
                         const brMarks = formatMarks(br.marks);
                         const brBlocks = renderTargetBlocksOnSheet(br, sz.point);
-                        const brPts = renderPointsOnSheet(br, sz.point);
+                        const brPts = renderPointsOnSheet(br, sz.point, q.id, br.id);
                         const brDiag = renderDiagramOnSheet(br.diagram);
 
                         const branchPrefix = bIdx === 0
@@ -2460,10 +2489,10 @@
                                 <div class="flex items-start justify-between gap-4" style="font-size: ${sz.title}px;">
                                     <div class="flex-1 font-bold leading-snug">
                                         <span>${branchPrefix}</span>
-                                        <span class="whitespace-pre-wrap break-words">${escapeHtml(br.text)}</span>
-                                        ${br.instruction.trim() ? `<span class="${instrMargin} font-bold">( ${escapeHtml(br.instruction.trim())} )</span>` : ''}
+                                        <span class="whitespace-pre-wrap break-words inline-edit" contenteditable="true" data-edit-kind="target" data-q-id="${q.id}" data-br-id="${br.id}" data-field="text">${escapeHtml(br.text)}</span>
+                                        ${br.instruction.trim() ? `<span class="${instrMargin} font-bold">( <span class="inline-edit" contenteditable="true" data-edit-kind="target" data-q-id="${q.id}" data-br-id="${br.id}" data-field="instruction">${escapeHtml(br.instruction.trim())}</span> )</span>` : ''}
                                     </div>
-                                    ${brMarks ? `<div class="font-bold shrink-0 whitespace-nowrap">${escapeHtml(brMarks)}</div>` : ''}
+                                    ${brMarks ? `<div class="font-bold shrink-0 whitespace-nowrap inline-edit" contenteditable="true" data-edit-kind="target" data-q-id="${q.id}" data-br-id="${br.id}" data-field="marks">${escapeHtml(brMarks)}</div>` : ''}
                                 </div>
                                 ${brBlocks}
                                 ${brDiag}
@@ -2476,7 +2505,7 @@
                 } else {
                     const qMarks = formatMarks(q.marks);
                     const qBlocks = renderTargetBlocksOnSheet(q, sz.point);
-                    const qPts = renderPointsOnSheet(q, sz.point);
+                    const qPts = renderPointsOnSheet(q, sz.point, q.id, null);
                     const qDiag = renderDiagramOnSheet(q.diagram);
 
                     visibleBlocks.push(`
@@ -2484,10 +2513,10 @@
                             <div class="flex items-start justify-between gap-4" style="font-size: ${sz.title}px;">
                                 <div class="flex-1 font-bold leading-snug">
                                     <span>${qPrefix}${qNumStr} / </span>
-                                    <span class="whitespace-pre-wrap break-words">${escapeHtml(q.text)}</span>
-                                    ${q.instruction.trim() ? `<span class="${instrMargin} font-bold">( ${escapeHtml(q.instruction.trim())} )</span>` : ''}
+                                    <span class="whitespace-pre-wrap break-words inline-edit" contenteditable="true" data-edit-kind="target" data-q-id="${q.id}" data-field="text">${escapeHtml(q.text)}</span>
+                                    ${q.instruction.trim() ? `<span class="${instrMargin} font-bold">( <span class="inline-edit" contenteditable="true" data-edit-kind="target" data-q-id="${q.id}" data-field="instruction">${escapeHtml(q.instruction.trim())}</span> )</span>` : ''}
                                 </div>
-                                ${qMarks ? `<div class="font-bold shrink-0 whitespace-nowrap">${escapeHtml(qMarks)}</div>` : ''}
+                                ${qMarks ? `<div class="font-bold shrink-0 whitespace-nowrap inline-edit" contenteditable="true" data-edit-kind="target" data-q-id="${q.id}" data-field="marks">${escapeHtml(qMarks)}</div>` : ''}
                             </div>
                             ${qBlocks}
                             ${qDiag}
@@ -2510,17 +2539,17 @@
                     <div class="${fStartAlign}">
                         ${f.principalName.trim() ? `
                             <div>${principalTitle}</div>
-                            <div class="mt-1 font-semibold">${escapeHtml(f.principalName)}</div>
+                            <div class="mt-1 font-semibold inline-edit" contenteditable="true" data-edit-kind="footer" data-field="principalName">${escapeHtml(f.principalName)}</div>
                         ` : ''}
                     </div>
                     <div class="text-center self-center">
-                        ${f.wish.trim() ? `<div>${escapeHtml(f.wish)}</div>` : ''}
+                        ${f.wish.trim() ? `<div class="inline-edit" contenteditable="true" data-edit-kind="footer" data-field="wish">${escapeHtml(f.wish)}</div>` : ''}
                     </div>
                     <div class="${fEndAlign}">
                         ${f.teacherName.trim() ? `
                             <div class="inline-block text-center">
                                 <div>${teacherTitle}</div>
-                                <div class="mt-1 font-semibold">${escapeHtml(f.teacherName)}</div>
+                                <div class="mt-1 font-semibold inline-edit" contenteditable="true" data-edit-kind="footer" data-field="teacherName">${escapeHtml(f.teacherName)}</div>
                             </div>
                         ` : ''}
                     </div>
@@ -2607,6 +2636,11 @@
             clone.style.boxShadow = 'none';
             clone.style.margin = '0';
             clone.querySelectorAll('.no-print').forEach(el => el.remove());
+            clone.querySelectorAll('[contenteditable]').forEach(el => {
+                el.removeAttribute('contenteditable');
+                el.style.outline = 'none';
+                el.style.background = 'transparent';
+            });
 
             holder.appendChild(clone);
             document.body.appendChild(holder);
@@ -2805,6 +2839,71 @@
             if (e.target.id === 'image-preview-modal') closeImageModal();
         });
 
+
+        // =========================================================
+        // التعديل المباشر على ورقة المعاينة ومزامنته مع المحرر تلقائياً
+        // =========================================================
+        function applyInlineEdit(el, isBlur) {
+            const kind = el.dataset.editKind;
+            if (!kind) return;
+            const rawText = el.innerText.replace(/\r/g, '');
+
+            if (kind === 'header') {
+                const field = el.dataset.field;
+                state.header[field] = rawText.trim();
+                const inp = document.querySelector(`.header-input[data-header="${field}"]`);
+                if (inp) inp.value = state.header[field];
+            } else if (kind === 'footer') {
+                const field = el.dataset.field;
+                state.footer[field] = rawText.trim();
+                const inp = document.querySelector(`.footer-input[data-footer="${field}"]`);
+                if (inp) inp.value = state.footer[field];
+            } else if (kind === 'target') {
+                const target = getTarget(el.dataset.qId, el.dataset.brId || null);
+                if (!target) return;
+                const field = el.dataset.field;
+                target[field] = field === 'text' ? rawText : rawText.trim();
+                if (field === 'marks') updateTotalMarks();
+            } else if (kind === 'point') {
+                const target = getTarget(el.dataset.qId, el.dataset.brId || null);
+                const pt = target && target.points.find(p => p.id === el.dataset.ptId);
+                if (pt) pt.text = rawText;
+            } else if (kind === 'mcq-opt') {
+                const target = getTarget(el.dataset.qId, el.dataset.brId || null);
+                const pt = target && target.points.find(p => p.id === el.dataset.ptId);
+                const oi = parseInt(el.dataset.optIdx, 10);
+                if (pt && Array.isArray(pt.options) && !isNaN(oi)) {
+                    pt.options[oi] = rawText.trim();
+                }
+            }
+
+            saveState();
+
+            if (isBlur) {
+                renderEditor();
+                renderSheet();
+            }
+        }
+
+        const sheetContentEl = document.getElementById('sheet-content');
+        sheetContentEl.addEventListener('input', e => {
+            const el = e.target.closest('.inline-edit');
+            if (el) applyInlineEdit(el, false);
+        });
+        sheetContentEl.addEventListener('focusout', e => {
+            const el = e.target.closest('.inline-edit');
+            if (el) applyInlineEdit(el, true);
+        });
+        sheetContentEl.addEventListener('keydown', e => {
+            const el = e.target.closest('.inline-edit');
+            if (!el) return;
+            // منع سطر جديد في الحقول القصيرة (الكليشة، الدرجات، التذييل، الخيارات)
+            if (e.key === 'Enter' && (el.dataset.editKind === 'header' || el.dataset.editKind === 'footer' || el.dataset.editKind === 'mcq-opt' || el.dataset.field === 'marks' || el.dataset.field === 'instruction')) {
+                e.preventDefault();
+                el.blur();
+            }
+        });
+
         // =========================================================
         // التهيئة عند التحميل وتغيير حجم الشاشة
         // =========================================================
@@ -2823,6 +2922,13 @@
             }
             applyStageScale();
         });
+
+        // تسجيل Service Worker للعمل بدون إنترنت (PWA)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(() => {});
+            });
+        }
     </script>
 </body>
 </html>
