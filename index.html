@@ -173,6 +173,51 @@
         }
 
 
+
+        /* وضع التعديل الحر الكامل على الورقة */
+        #exam-sheet.free-edit-active {
+            box-shadow: 0 0 0 3px #0d9488, 0 14px 36px rgba(15, 23, 42, 0.18);
+        }
+        #sheet-content[contenteditable="true"] {
+            outline: none;
+            cursor: text;
+        }
+        .fmt-btn {
+            height: 28px;
+            min-width: 28px;
+            padding: 0 7px;
+            border-radius: 7px;
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #0f172a;
+            font-size: 12px;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.12s ease;
+        }
+        .fmt-btn:hover {
+            background: #f0fdfa;
+            border-color: #0d9488;
+            color: #115e59;
+        }
+        .fmt-btn:active {
+            transform: scale(0.94);
+        }
+        .color-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 9999px;
+            border: 1.5px solid #94a3b8;
+            cursor: pointer;
+            transition: transform 0.12s ease;
+        }
+        .color-dot:hover {
+            transform: scale(1.18);
+        }
+
         /* التعديل المباشر على ورقة المعاينة */
         .inline-edit {
             border-radius: 4px;
@@ -557,23 +602,82 @@
 
         <!-- ==================== 2. لوحة المعاينة الحية ==================== -->
         <section id="preview-panel" class="hidden lg:flex flex-1 h-full overflow-y-auto overflow-x-auto bg-slate-200/90 p-2 sm:p-5 flex-col items-center">
-            <div class="no-print w-full max-w-[794px] flex flex-wrap items-center justify-between gap-2 mb-3 px-1">
-                <div class="flex flex-wrap items-center gap-2">
-                    <span class="text-xs font-bold text-slate-700">معاينة حية بمقاس الطباعة الحقيقي</span>
-                    <span class="text-[11px] font-bold text-teal-800 bg-teal-50 border border-teal-200 px-2 py-0.5 rounded-lg">✏️ اضغط على أي نص للتعديل المباشر</span>
+            <div class="no-print w-full max-w-[794px] space-y-2 mb-3 px-1">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button type="button" id="free-edit-toggle-btn" onclick="toggleFreeEditMode()"
+                            class="px-3 py-1.5 rounded-xl text-xs font-extrabold border shadow-2xs flex items-center gap-1.5 transition active:scale-95 bg-white hover:bg-teal-50 text-teal-900 border-teal-300">
+                            <span>✏️ تفعيل التعديل الحر الكامل (نصوص + ألوان)</span>
+                        </button>
+                        <button type="button" id="free-edit-reset-btn" onclick="resetFreeEditToBuilder()"
+                            class="hidden px-2.5 py-1.5 rounded-xl text-xs font-bold bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 transition">
+                            ↺ استعادة الورقة من المحرر
+                        </button>
+                    </div>
+
+                    <div class="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-300 shadow-2xs">
+                        <button type="button" onclick="adjustManualZoom(-0.1)"
+                            class="w-7 h-7 rounded-lg hover:bg-slate-100 text-slate-700 font-extrabold text-sm flex items-center justify-center transition"
+                            title="تصغير">−</button>
+                        <button type="button" onclick="resetZoomToFit()"
+                            class="px-2.5 h-7 rounded-lg hover:bg-teal-50 text-teal-800 font-bold text-xs flex items-center justify-center transition"
+                            title="ملائمة لعرض الشاشة">
+                            <span id="zoom-label">ملائمة</span>
+                        </button>
+                        <button type="button" onclick="adjustManualZoom(0.1)"
+                            class="w-7 h-7 rounded-lg hover:bg-slate-100 text-slate-700 font-extrabold text-sm flex items-center justify-center transition"
+                            title="تكبير">+</button>
+                    </div>
                 </div>
-                <div class="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-300 shadow-2xs">
-                    <button type="button" onclick="adjustManualZoom(-0.1)"
-                        class="w-7 h-7 rounded-lg hover:bg-slate-100 text-slate-700 font-extrabold text-sm flex items-center justify-center transition"
-                        title="تصغير">−</button>
-                    <button type="button" onclick="resetZoomToFit()"
-                        class="px-2.5 h-7 rounded-lg hover:bg-teal-50 text-teal-800 font-bold text-xs flex items-center justify-center transition"
-                        title="ملائمة لعرض الشاشة">
-                        <span id="zoom-label">ملائمة</span>
-                    </button>
-                    <button type="button" onclick="adjustManualZoom(0.1)"
-                        class="w-7 h-7 rounded-lg hover:bg-slate-100 text-slate-700 font-extrabold text-sm flex items-center justify-center transition"
-                        title="تكبير">+</button>
+
+                <!-- شريط التنسيق والألوان السريع (يظهر عند تفعيل التعديل الحر الكامل) -->
+                <div id="free-edit-toolbar" class="hidden sticky top-1 z-20 bg-white/95 backdrop-blur-xs rounded-2xl border border-teal-300 shadow-md p-2 flex flex-wrap items-center gap-1.5">
+                    <!-- غامق، مائل، تسطير -->
+                    <button type="button" class="fmt-btn" onmousedown="event.preventDefault()" onclick="execFmt('bold')" title="خط عريض (غامق)"><b>B</b></button>
+                    <button type="button" class="fmt-btn" onmousedown="event.preventDefault()" onclick="execFmt('italic')" title="خط مائل"><i>I</i></button>
+                    <button type="button" class="fmt-btn" onmousedown="event.preventDefault()" onclick="execFmt('underline')" title="تسطير (خط تحت الكلمة)"><u>U</u></button>
+
+                    <span class="w-px h-5 bg-slate-200 mx-0.5"></span>
+
+                    <!-- ألوان النص السريعة + منتقي لون حر -->
+                    <span class="text-[11px] font-bold text-slate-500">اللون:</span>
+                    <button type="button" class="color-dot" style="background:#000000;" onmousedown="event.preventDefault()" onclick="execFmt('foreColor', '#000000')" title="أسود"></button>
+                    <button type="button" class="color-dot" style="background:#dc2626;" onmousedown="event.preventDefault()" onclick="execFmt('foreColor', '#dc2626')" title="أحمر"></button>
+                    <button type="button" class="color-dot" style="background:#1d4ed8;" onmousedown="event.preventDefault()" onclick="execFmt('foreColor', '#1d4ed8')" title="أزرق"></button>
+                    <button type="button" class="color-dot" style="background:#15803d;" onmousedown="event.preventDefault()" onclick="execFmt('foreColor', '#15803d')" title="أخضر"></button>
+                    <button type="button" class="color-dot" style="background:#7c3aed;" onmousedown="event.preventDefault()" onclick="execFmt('foreColor', '#7c3aed')" title="بنفسجي"></button>
+                    <label class="fmt-btn px-1.5 gap-1 cursor-pointer" title="اختيار أي لون آخر" onmousedown="saveCurrentSelection()">
+                        <span>🎨</span>
+                        <input type="color" id="custom-text-color" value="#dc2626" onchange="applySavedColor('foreColor', this.value)" class="w-4 h-4 p-0 border-0 bg-transparent cursor-pointer">
+                    </label>
+
+                    <span class="w-px h-5 bg-slate-200 mx-0.5"></span>
+
+                    <!-- التظليل (Highlight) -->
+                    <span class="text-[11px] font-bold text-slate-500">تظليل:</span>
+                    <button type="button" class="color-dot" style="background:#fef08a;" onmousedown="event.preventDefault()" onclick="execFmt('hiliteColor', '#fef08a')" title="تظليل أصفر"></button>
+                    <button type="button" class="color-dot" style="background:#bbf7d0;" onmousedown="event.preventDefault()" onclick="execFmt('hiliteColor', '#bbf7d0')" title="تظليل أخضر"></button>
+                    <button type="button" class="color-dot" style="background:#ffffff;" onmousedown="event.preventDefault()" onclick="execFmt('hiliteColor', 'transparent')" title="إزالة التظليل">✕</button>
+
+                    <span class="w-px h-5 bg-slate-200 mx-0.5"></span>
+
+                    <!-- حجم الخط المحدد -->
+                    <button type="button" class="fmt-btn" onmousedown="event.preventDefault()" onclick="changeSelectedFontSize(1)" title="تكبير النص المحدد">A+</button>
+                    <button type="button" class="fmt-btn" onmousedown="event.preventDefault()" onclick="changeSelectedFontSize(-1)" title="تصغير النص المحدد">A−</button>
+
+                    <span class="w-px h-5 bg-slate-200 mx-0.5"></span>
+
+                    <!-- المحاذاة -->
+                    <button type="button" class="fmt-btn" onmousedown="event.preventDefault()" onclick="execFmt('justifyRight')" title="محاذاة لليمين">يمين</button>
+                    <button type="button" class="fmt-btn" onmousedown="event.preventDefault()" onclick="execFmt('justifyCenter')" title="توسيط">وسط</button>
+                    <button type="button" class="fmt-btn" onmousedown="event.preventDefault()" onclick="execFmt('justifyLeft')" title="محاذاة لليسار">يسار</button>
+
+                    <span class="w-px h-5 bg-slate-200 mx-0.5"></span>
+
+                    <!-- تراجع ومسح التنسيق -->
+                    <button type="button" class="fmt-btn" onmousedown="event.preventDefault()" onclick="execFmt('undo')" title="تراجع">↶</button>
+                    <button type="button" class="fmt-btn" onmousedown="event.preventDefault()" onclick="execFmt('redo')" title="إعادة">↷</button>
+                    <button type="button" class="fmt-btn text-rose-700" onmousedown="event.preventDefault()" onclick="execFmt('removeFormat')" title="إزالة التنسيق والألوان عن النص المحدد">مسح التنسيق</button>
                 </div>
             </div>
 
@@ -899,6 +1003,8 @@
                     borderStyle: 'none',
                     showDividers: true
                 },
+                freeEditMode: false,
+                freeEditHtml: '',
                 questions: [createEmptyQuestion()]
             };
         }
@@ -990,6 +1096,8 @@
                     header: { ...base.header, ...(parsed.header || {}) },
                     footer: { ...base.footer, ...(parsed.footer || {}) },
                     settings: { ...base.settings, ...(parsed.settings || {}) },
+                    freeEditMode: Boolean(parsed.freeEditMode),
+                    freeEditHtml: typeof parsed.freeEditHtml === 'string' ? parsed.freeEditHtml : '', 
                     questions: Array.isArray(parsed.questions)
                         ? parsed.questions.map(q => {
                             const qType = ['normal', 'blanks', 'mcq', 'truefalse'].includes(q.qType) ? q.qType : 'normal';
@@ -2376,6 +2484,7 @@
 
             sheet.className = 'exam-sheet';
             if (en) sheet.classList.add('lang-en');
+            if (state.freeEditMode) sheet.classList.add('free-edit-active');
             sheet.dir = en ? 'ltr' : 'rtl';
 
             if (s.paperSize === 'a4-compact') sheet.classList.add('size-a4-compact');
@@ -2396,6 +2505,18 @@
             inner.className = 'sheet-inner';
             if (s.borderStyle === 'simple') inner.classList.add('with-border-simple');
             else if (s.borderStyle === 'double') inner.classList.add('with-border-double');
+
+            syncFreeEditUI();
+
+            // إذا كان وضع التعديل الحر الكامل مفعّلاً ويوجد محتوى معدّل، نعرضه كما هو بكل ألوانه وتعديلاته
+            if (state.freeEditMode && state.freeEditHtml) {
+                content.innerHTML = state.freeEditHtml;
+                content.setAttribute('contenteditable', 'true');
+                content.setAttribute('spellcheck', 'false');
+                applyStageScale();
+                return;
+            }
+            content.removeAttribute('contenteditable');
 
             const h = state.header;
             const f = state.footer;
@@ -2819,6 +2940,8 @@
         document.getElementById('modal-confirm-btn').addEventListener('click', () => {
             if (pendingResetType === 'questions') {
                 state.questions = [createEmptyQuestion()];
+                state.freeEditMode = false;
+                state.freeEditHtml = '';
                 showToast('تم مسح الأسئلة مع الاحتفاظ بالكليشة.', 'info', 3000);
             } else if (pendingResetType === 'all') {
                 state = createEmptyState();
@@ -2885,19 +3008,161 @@
             }
         }
 
+        // =========================================================
+        // وضع التعديل الحر الكامل للورقة (تعديل أي نص + ألوان + تسطير + تنسيق)
+        // =========================================================
+        let savedSelectionRange = null;
+
+        function syncFreeEditUI() {
+            const toggleBtn = document.getElementById('free-edit-toggle-btn');
+            const resetBtn = document.getElementById('free-edit-reset-btn');
+            const toolbar = document.getElementById('free-edit-toolbar');
+            const sheet = document.getElementById('exam-sheet');
+            if (!toggleBtn || !toolbar) return;
+
+            if (state.freeEditMode) {
+                toggleBtn.innerHTML = '<span>✓ وضع التعديل الحر مفعّل (اضغط للإنهاء)</span>';
+                toggleBtn.className = 'px-3 py-1.5 rounded-xl text-xs font-extrabold border shadow-xs flex items-center gap-1.5 transition active:scale-95 bg-teal-600 hover:bg-teal-700 text-white border-teal-700';
+                toolbar.classList.remove('hidden');
+                if (resetBtn) resetBtn.classList.remove('hidden');
+                if (sheet) sheet.classList.add('free-edit-active');
+            } else {
+                toggleBtn.innerHTML = '<span>✏️ تفعيل التعديل الحر الكامل (نصوص + ألوان)</span>';
+                toggleBtn.className = 'px-3 py-1.5 rounded-xl text-xs font-extrabold border shadow-2xs flex items-center gap-1.5 transition active:scale-95 bg-white hover:bg-teal-50 text-teal-900 border-teal-300';
+                toolbar.classList.add('hidden');
+                if (resetBtn) resetBtn.classList.add('hidden');
+                if (sheet) sheet.classList.remove('free-edit-active');
+            }
+        }
+
+        function toggleFreeEditMode() {
+            const content = document.getElementById('sheet-content');
+            if (!state.freeEditMode) {
+                // تفعيل التعديل الحر الكامل على محتوى الورقة الحالي
+                state.freeEditMode = true;
+                // إزالة سمات التعديل الفرعي المتداخلة حتى لا تعيق التحديد الحر
+                content.querySelectorAll('.inline-edit').forEach(el => {
+                    el.removeAttribute('contenteditable');
+                    el.classList.remove('inline-edit');
+                });
+                state.freeEditHtml = content.innerHTML;
+                content.setAttribute('contenteditable', 'true');
+                content.setAttribute('spellcheck', 'false');
+                saveState();
+                syncFreeEditUI();
+                showToast('وضع التعديل الحر مفعّل! يمكنك الآن تعديل أي كلمة أو تلوينها وتنسيقها بحرية كاملة.', 'success', 4000);
+            } else {
+                // إيقاف شريط التعديل الحر مع الاحتفاظ بالورقة كما هي أو الرجوع
+                state.freeEditHtml = content.innerHTML;
+                state.freeEditMode = false;
+                content.removeAttribute('contenteditable');
+                saveState();
+                renderSheet();
+                showToast('تم العودة لوضع المحرر القياسي.', 'info', 2800);
+            }
+        }
+
+        function resetFreeEditToBuilder() {
+            state.freeEditMode = false;
+            state.freeEditHtml = '';
+            const content = document.getElementById('sheet-content');
+            content.removeAttribute('contenteditable');
+            saveState();
+            renderSheet();
+            showToast('تمت استعادة الورقة من المحرر بنجاح.', 'info', 3000);
+        }
+
+        function saveCurrentSelection() {
+            const sel = window.getSelection();
+            if (sel && sel.rangeCount > 0) {
+                savedSelectionRange = sel.getRangeAt(0).cloneRange();
+            }
+        }
+
+        function restoreSavedSelection() {
+            if (!savedSelectionRange) return;
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(savedSelectionRange);
+        }
+
+        function execFmt(cmd, val = null) {
+            if (!state.freeEditMode) return;
+            const content = document.getElementById('sheet-content');
+            content.focus();
+            try {
+                document.execCommand('styleWithCSS', false, true);
+            } catch (_) {}
+            document.execCommand(cmd, false, val);
+            state.freeEditHtml = content.innerHTML;
+            saveState();
+            applyStageScale();
+        }
+
+        function applySavedColor(cmd, colorVal) {
+            if (!state.freeEditMode) return;
+            restoreSavedSelection();
+            execFmt(cmd, colorVal);
+        }
+
+        function changeSelectedFontSize(delta) {
+            if (!state.freeEditMode) return;
+            const sel = window.getSelection();
+            if (!sel || sel.rangeCount === 0 || sel.isCollapsed) {
+                showToast('ظلّل الكلمة أو السطر أولاً ثم اضغط A+ أو A−.', 'info', 2500);
+                return;
+            }
+            const range = sel.getRangeAt(0);
+            const content = document.getElementById('sheet-content');
+            if (!content.contains(range.commonAncestorContainer)) return;
+
+            const parentEl = range.commonAncestorContainer.nodeType === 1
+                ? range.commonAncestorContainer
+                : range.commonAncestorContainer.parentElement;
+            const curSize = parseFloat(window.getComputedStyle(parentEl).fontSize) || 16;
+            const nextSize = Math.max(10, Math.min(42, Math.round(curSize + delta * 2)));
+
+            const span = document.createElement('span');
+            span.style.fontSize = `${nextSize}px`;
+            try {
+                span.appendChild(range.extractContents());
+                range.insertNode(span);
+                sel.removeAllRanges();
+                const newRange = document.createRange();
+                newRange.selectNodeContents(span);
+                sel.addRange(newRange);
+            } catch (err) {
+                console.error(err);
+            }
+            state.freeEditHtml = content.innerHTML;
+            saveState();
+            applyStageScale();
+        }
+
         const sheetContentEl = document.getElementById('sheet-content');
         sheetContentEl.addEventListener('input', e => {
+            if (state.freeEditMode) {
+                state.freeEditHtml = sheetContentEl.innerHTML;
+                saveState();
+                applyStageScale();
+                return;
+            }
             const el = e.target.closest('.inline-edit');
             if (el) applyInlineEdit(el, false);
         });
         sheetContentEl.addEventListener('focusout', e => {
+            if (state.freeEditMode) {
+                state.freeEditHtml = sheetContentEl.innerHTML;
+                saveState();
+                return;
+            }
             const el = e.target.closest('.inline-edit');
             if (el) applyInlineEdit(el, true);
         });
         sheetContentEl.addEventListener('keydown', e => {
+            if (state.freeEditMode) return;
             const el = e.target.closest('.inline-edit');
             if (!el) return;
-            // منع سطر جديد في الحقول القصيرة (الكليشة، الدرجات، التذييل، الخيارات)
             if (e.key === 'Enter' && (el.dataset.editKind === 'header' || el.dataset.editKind === 'footer' || el.dataset.editKind === 'mcq-opt' || el.dataset.field === 'marks' || el.dataset.field === 'instruction')) {
                 e.preventDefault();
                 el.blur();
