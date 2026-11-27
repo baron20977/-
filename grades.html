@@ -2779,7 +2779,7 @@
 
 
 <!-- ============================================================
-     تحديث V2: قالب الابتدائية (سعي ونهائي) + سجل المتابعة اليومي والشفوي
+     تحديث V2 (مُصحح): قالب الابتدائية + سجل المتابعة اليومي والشفوي
      ============================================================ -->
 <div id="followup-modal" class="no-print fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-50 hidden items-center justify-center p-2 sm:p-4">
   <div class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full overflow-hidden flex flex-col max-h-[92vh]">
@@ -2801,11 +2801,11 @@
         <span class="text-slate-900 font-extrabold">إعدادات المعادلة:</span>
         <label class="inline-flex items-center gap-1 bg-white border border-slate-300 rounded-lg px-2 py-1">
           <span>درجة الأساس:</span>
-          <input id="fu-base-score" type="number" value="10" min="0" max="100" onchange="updateFollowupConfig()" class="w-12 text-center font-extrabold text-emerald-700 focus:outline-none" />
+          <input id="fu-base-score" type="text" inputmode="decimal" value="10" oninput="updateFollowupConfig()" class="w-12 text-center font-extrabold text-emerald-700 focus:outline-none" />
         </label>
         <label class="inline-flex items-center gap-1 bg-white border border-slate-300 rounded-lg px-2 py-1">
           <span>الحد الأقصى:</span>
-          <input id="fu-max-score" type="number" value="20" min="5" max="100" onchange="updateFollowupConfig()" class="w-12 text-center font-extrabold text-blue-700 focus:outline-none" />
+          <input id="fu-max-score" type="text" inputmode="decimal" value="20" oninput="updateFollowupConfig()" class="w-12 text-center font-extrabold text-blue-700 focus:outline-none" />
         </label>
         <span class="text-[11px] text-slate-500">(حاضر +1 | دفتر +1 | محضّر +2 | غائب -1 | مجاز 0 | سلوك -2)</span>
       </div>
@@ -2844,7 +2844,7 @@
 <script>
 (function() {
   /* ------------------------------------------------------------
-     1. إضافة قالب المرحلة الابتدائية (سعي ونهائي) وتعديل الحساب التلقائي
+     1. قالب المرحلة الابتدائية + تطبيق القالب فور الاختيار
      ------------------------------------------------------------ */
   COLUMN_PRESETS.primary_annual = {
     subject: '',
@@ -2852,16 +2852,20 @@
   };
 
   window.addEventListener('DOMContentLoaded', () => {
-    // إضافة خيار قالب الابتدائية لقائمة القوالب
     const presetSelect = document.getElementById('inp-column-preset');
-    if (presetSelect && !presetSelect.querySelector('option[value="primary_annual"]')) {
-      const opt = document.createElement('option');
-      opt.value = 'primary_annual';
-      opt.textContent = 'المرحلة الابتدائية (سعي ونهائي): المعدل الأول، نصف السنة، المعدل الثاني، السعي، النهائي';
-      presetSelect.insertBefore(opt, presetSelect.firstChild);
+    if (presetSelect) {
+      if (!presetSelect.querySelector('option[value="primary_annual"]')) {
+        const opt = document.createElement('option');
+        opt.value = 'primary_annual';
+        opt.textContent = 'المرحلة الابتدائية (سعي ونهائي): المعدل الأول، نصف السنة، المعدل الثاني، السعي، النهائي';
+        presetSelect.insertBefore(opt, presetSelect.firstChild);
+      }
+      // تطبيق القالب تلقائياً بمجرد اختياره من القائمة
+      presetSelect.addEventListener('change', () => {
+        applySelectedColumnPreset();
+      });
     }
 
-    // إضافة زر "المتابعة اليومية والشفوي" لشريط أزرار الطلاب
     const studentsTab = document.querySelector('#ctrl-tab-students .flex');
     if (studentsTab && !document.getElementById('btn-open-followup')) {
       const btn = document.createElement('button');
@@ -2873,7 +2877,7 @@
     }
   });
 
-  // تغليف دالة حساب النتيجة لدعم معادلة الابتدائية (السعي والنهائي) بدون التأثير على باقي القوالب
+  // معادلة المرحلة الابتدائية (السعي والنهائي)
   const _origComputeStudentResult = window.computeStudentResult;
   window.computeStudentResult = function(student, section) {
     const cols = section.columns || [];
@@ -2902,7 +2906,6 @@
     const rawFinal = String(sc[colFinal.id] || '').trim();
     const vFinal = parseNum(colFinal.id);
 
-    // حساب السعي تلقائياً إذا كانت خانة السعي فارغة وتوفرت الدرجات الثلاث
     if (vSai === null && (v1 !== null || vMid !== null || v2 !== null)) {
       const parts = [v1, vMid, v2].filter(x => x !== null);
       vSai = Math.round(parts.reduce((a, b) => a + b, 0) / parts.length);
@@ -2963,9 +2966,16 @@
   };
 
   /* ------------------------------------------------------------
-     2. سجل المتابعة اليومي والشفوي + الترحيل الفردي لكل طالب
+     2. سجل المتابعة اليومي والشفوي (يدعم الأرقام العربية والحساب الفوري)
      ------------------------------------------------------------ */
   const FU_WEIGHTS = { present: 1, notebook: 1, prepared: 2, absent: -1, excused: 0, behavior: -2 };
+
+  function parseArabicNumber(val, fallback) {
+    const clean = toWesternDigits(String(val ?? '')).trim();
+    if (clean === '') return fallback;
+    const n = parseFloat(clean);
+    return isNaN(n) ? fallback : n;
+  }
 
   function ensureFollowupData(sec) {
     if (!sec.followupConfig) sec.followupConfig = { base: 10, max: 20 };
@@ -2979,30 +2989,32 @@
   function calcOralScore(st, cfg) {
     const f = st.followup;
     if (f.manualOral !== null && f.manualOral !== undefined && f.manualOral !== '') {
-      return Number(f.manualOral);
+      return f.manualOral;
     }
-    const pts = (f.present * FU_WEIGHTS.present) + (f.notebook * FU_WEIGHTS.notebook) +
-                (f.prepared * FU_WEIGHTS.prepared) + (f.absent * FU_WEIGHTS.absent) +
-                (f.excused * FU_WEIGHTS.excused) + (f.behavior * FU_WEIGHTS.behavior);
-    const total = cfg.base + pts;
-    return Math.max(0, Math.min(cfg.max, total));
+    const base = parseArabicNumber(cfg.base, 10);
+    const max = parseArabicNumber(cfg.max, 20);
+    const pts = ((f.present || 0) * FU_WEIGHTS.present) +
+                ((f.notebook || 0) * FU_WEIGHTS.notebook) +
+                ((f.prepared || 0) * FU_WEIGHTS.prepared) +
+                ((f.absent || 0) * FU_WEIGHTS.absent) +
+                ((f.excused || 0) * FU_WEIGHTS.excused) +
+                ((f.behavior || 0) * FU_WEIGHTS.behavior);
+    return Math.max(0, Math.min(max, base + pts));
   }
 
   window.openFollowupModal = function() {
     const sec = getActiveSection();
     ensureFollowupData(sec);
     document.getElementById('fu-section-subtitle').textContent = `${sec.grade} (${sec.sectionName || 'بدون'}) — ${sec.subject}`;
-    document.getElementById('fu-base-score').value = sec.followupConfig.base;
-    document.getElementById('fu-max-score').value = sec.followupConfig.max;
+    document.getElementById('fu-base-score').value = formatDigits(sec.followupConfig.base);
+    document.getElementById('fu-max-score').value = formatDigits(sec.followupConfig.max);
 
-    // تعبئة قائمة الأعمدة المتاحة للترحيل
     const targetSel = document.getElementById('fu-target-col');
     let opts = `<option value="__total__">الدرجة المباشرة (رقماً)</option>`;
     (sec.columns || []).forEach(c => {
       opts += `<option value="${c.id}">عمود: ${escapeHtml(c.name)}</option>`;
     });
     targetSel.innerHTML = opts;
-    // اختيار عمود "الشفوي" أو "اليومي" تلقائياً إن وجد
     const oralCol = (sec.columns || []).find(c => /شفوي|يومي/.test(c.name));
     if (oralCol) targetSel.value = oralCol.id;
 
@@ -3021,8 +3033,8 @@
   window.updateFollowupConfig = function() {
     const sec = getActiveSection();
     ensureFollowupData(sec);
-    sec.followupConfig.base = Math.max(0, Number(document.getElementById('fu-base-score').value) || 0);
-    sec.followupConfig.max = Math.max(1, Number(document.getElementById('fu-max-score').value) || 20);
+    sec.followupConfig.base = Math.max(0, parseArabicNumber(document.getElementById('fu-base-score').value, 10));
+    sec.followupConfig.max = Math.max(1, parseArabicNumber(document.getElementById('fu-max-score').value, 20));
     saveState();
     renderFollowupTable();
   };
@@ -3033,7 +3045,7 @@
     if (!st) return;
     ensureFollowupData(sec);
     st.followup[field] = Math.max(0, (st.followup[field] || 0) + delta);
-    st.followup.manualOral = null; // إعادة الحساب التلقائي عند التعديل
+    st.followup.manualOral = null;
     saveState();
     renderFollowupTable();
   };
@@ -3042,7 +3054,13 @@
     const sec = getActiveSection();
     const st = sec.students.find(s => s.id === stId);
     if (!st) return;
-    st.followup.manualOral = val.trim() === '' ? null : Number(toWesternDigits(val));
+    const clean = toWesternDigits(val).trim();
+    if (clean === '') {
+      st.followup.manualOral = null;
+    } else {
+      const n = parseFloat(clean);
+      st.followup.manualOral = isNaN(n) ? null : n;
+    }
     saveState();
   };
 
@@ -3093,9 +3111,9 @@
     const counterCell = (stId, field, val, colorCls) => `
       <td class="p-1.5 border border-slate-200">
         <div class="inline-flex items-center gap-1">
-          <button onclick="adjustFollowup('${stId}','${field}',-1)" class="w-6 h-6 rounded bg-slate-200 hover:bg-slate-300 font-extrabold text-slate-700">-</button>
+          <button type="button" onclick="adjustFollowup('${stId}','${field}',-1)" class="w-6 h-6 rounded bg-slate-200 hover:bg-slate-300 font-extrabold text-slate-700">-</button>
           <span class="w-6 font-extrabold ${colorCls}">${formatDigits(val)}</span>
-          <button onclick="adjustFollowup('${stId}','${field}',1)" class="w-6 h-6 rounded bg-slate-800 hover:bg-slate-700 font-extrabold text-white">+</button>
+          <button type="button" onclick="adjustFollowup('${stId}','${field}',1)" class="w-6 h-6 rounded bg-slate-800 hover:bg-slate-700 font-extrabold text-white">+</button>
         </div>
       </td>`;
 
@@ -3113,11 +3131,11 @@
           ${counterCell(st.id, 'excused', f.excused, 'text-amber-600')}
           ${counterCell(st.id, 'behavior', f.behavior, 'text-rose-700')}
           <td class="p-1.5 border border-slate-200 bg-emerald-50">
-            <input type="number" value="${oral}" onchange="setManualOral('${st.id}', this.value)"
+            <input type="text" inputmode="decimal" value="${formatDigits(oral)}" oninput="setManualOral('${st.id}', this.value)"
               class="w-16 text-center rounded-lg border border-emerald-300 bg-white py-1 font-extrabold text-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
           </td>
           <td class="p-1.5 border border-slate-200">
-            <button onclick="transferSingleStudentOral('${st.id}')" class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shadow-xs transition">
+            <button type="button" onclick="transferSingleStudentOral('${st.id}')" class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shadow-xs transition">
               ترحيل ↗️
             </button>
           </td>
@@ -3125,5 +3143,7 @@
     }).join('');
   }
 })();
+</script>
+</html>
 </script>
 </html>
