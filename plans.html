@@ -664,5 +664,17 @@
       renderLibrarySelect();
     });
   </script>
+  <script>
+  window.addEventListener('DOMContentLoaded', () => {
+    const gradesBtn = document.querySelector('a[href="grades.html"]');
+    if (gradesBtn && !document.querySelector('a[href="schedule.html"]')) {
+      const a = document.createElement('a');
+      a.href = 'schedule.html';
+      a.className = 'px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs sm:text-sm font-bold text-indigo-300 transition';
+      a.textContent = '🗓️ الجدول';
+      gradesBtn.insertAdjacentElement('afterend', a);
+    }
+  });
+</script>
 </body>
 </html>
