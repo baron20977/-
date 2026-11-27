@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>منشئ الخطة اليومية والسنوية - العراق</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --plan-header-bg: #dbeafe;
+      --plan-label-bg: #e2e8f0;
+      --plan-accent: #1e3a8a;
+      --plan-border: #1f2937;
+    }
+    [data-plan-theme="green"] {
+      --plan-header-bg: #dcfce7;
+      --plan-label-bg: #ecfdf5;
+      --plan-accent: #14532d;
+    }
+    [data-plan-theme="sand"] {
+      --plan-header-bg: #fef3c7;
+      --plan-label-bg: #f1f5f9;
+      --plan-accent: #78350f;
+    }
+    [data-plan-theme="bw"] {
+      --plan-header-bg: #f3f4f6;
+      --plan-label-bg: #f9fafb;
+      --plan-accent: #111827;
+    }
+
+    body {
+      font-family: 'Cairo', 'Tajawal', 'Segoe UI', Tahoma, Arial, sans-serif;
+      background-color: #f1f5f9;
+      color: #0f172a;
+    }
+
+    .a4-wrapper {
+      overflow-x: auto;
+      padding: 1rem 0.5rem 2.5rem;
+    }
+
+    .a4-sheet {
+      width: 210mm;
+      min-height: 297mm;
+      background: #ffffff;
+      margin: 0 auto;
+      padding: 10mm;
+      box-sizing: border-box;
+      box-shadow: 0 12px 30px -8px rgba(15, 23, 42, 0.16);
+      border-radius: 4px;
+      color: #000;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .plan-frame {
+      border: 2px solid var(--plan-border);
+      padding: 4mm;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .plan-banner {
+      background-color: var(--plan-header-bg);
+      border: 1.5px solid var(--plan-border);
+      text-align: center;
+      font-size: 16px;
+      font-weight: 800;
+      padding: 6px 10px;
+      margin-bottom: 6px;
+      color: var(--plan-accent);
+    }
+
+    .plan-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      flex: 1;
+    }
+
+    .plan-table th,
+    .plan-table td {
+      border: 1.3px solid var(--plan-border);
+      padding: 6px 8px;
+      vertical-align: top;
+    }
+
+    .plan-label-cell {
+      width: 115px;
+      background-color: var(--plan-label-bg);
+      font-weight: 800;
+      text-align: center;
+      vertical-align: middle !important;
+      font-size: 13px;
+    }
+
+    .plan-meta-row td {
+      background-color: #f8fafc;
+      font-weight: 700;
+      padding: 5px 8px;
+      vertical-align: middle !important;
+    }
+
+    .editable-box {
+      width: 100%;
+      min-height: 24px;
+      outline: none;
+      white-space: pre-wrap;
+      line-height: 1.65;
+      font-weight: 600;
+      border-radius: 4px;
+    }
+
+    .editable-box:hover {
+      background-color: rgba(254, 249, 195, 0.45);
+    }
+
+    .editable-box:focus {
+      background-color: #fef9c3;
+      box-shadow: inset 0 0 0 1px #eab308;
+    }
+
+    .annual-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+    }
+    .annual-table th,
+    .annual-table td {
+      border: 1.3px solid var(--plan-border);
+      padding: 6px 8px;
+      vertical-align: middle;
+    }
+    .annual-table th {
+      background-color: var(--plan-header-bg);
+      color: var(--plan-accent);
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .plan-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+      padding-top: 6px;
+      font-size: 12.5px;
+      font-weight: 800;
+    }
+
+    @page {
+      size: A4 portrait;
+      margin: 8mm;
+    }
+
+    @media print {
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      body { background: #fff !important; margin: 0 !important; }
+      .no-print { display: none !important; }
+      .a4-wrapper { overflow: visible !important; padding: 0 !important; }
+      .a4-sheet {
+        width: 100% !important;
+        min-height: 280mm !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+      }
+      .editable-box:hover, .editable-box:focus {
+        background: transparent !important;
+        box-shadow: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- الشريط العلوي -->
+  <header class="no-print bg-slate-900 text-white shadow-md sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-3 sm:px-5 py-2.5 flex flex-wrap items-center justify-between gap-2.5">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-inner shrink-0 font-extrabold text-lg">📘</div>
+        <div>
+          <h1 class="text-sm sm:text-base font-extrabold leading-tight">منشئ الخطة اليومية والسنوية - العراق</h1>
+          <p class="text-[11px] sm:text-xs text-slate-300">ابتدائي • متوسط • إعدادي • كلايش جاهزة وتعديل كامل</p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+        <a href="index.html" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs sm:text-sm font-bold text-amber-300 transition">📝 منشئ الأسئلة</a>
+        <a href="grades.html" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs sm:text-sm font-bold text-emerald-300 transition">📊 سجل الدرجات</a>
+        <button onclick="saveCurrentPlanToLibrary()" class="px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs sm:text-sm font-extrabold text-white transition">💾 حفظ بالمكتبة</button>
+        <button onclick="window.print()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs sm:text-sm font-extrabold text-white shadow transition">🖨️ طباعة / PDF</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- تبويبات نوع الخطة + الخطط المحفوظة -->
+  <section class="no-print bg-white border-b border-slate-200 sticky top-[58px] z-20">
+    <div class="max-w-7xl mx-auto px-3 sm:px-5 py-2 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <button onclick="switchPlanMode('daily')" id="mode-btn-daily" class="px-4 py-1.5 rounded-xl text-xs sm:text-sm font-extrabold bg-slate-900 text-white transition">📄 الخطة اليومية</button>
+        <button onclick="switchPlanMode('annual')" id="mode-btn-annual" class="px-4 py-1.5 rounded-xl text-xs sm:text-sm font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition">📅 الخطة السنوية</button>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <select id="saved-plans-select" onchange="loadSavedPlan(this.value)" class="rounded-xl border border-slate-300 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-800 max-w-[200px]">
+          <option value="">📂 خططي المحفوظة (0)</option>
+        </select>
+        <button onclick="deleteSelectedSavedPlan()" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold">حذف</button>
+        <select id="theme-select" onchange="changeTheme(this.value)" class="rounded-xl border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-bold">
+          <option value="blue">لون أزرق رسمي</option>
+          <option value="green">لون أخضر رسمي</option>
+          <option value="sand">لون دفتري كلاسيكي</option>
+          <option value="bw">أبيض وأسود</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <!-- لوحة الكلايش الجاهزة (تظهر للخطة اليومية) -->
+  <section id="templates-toolbar" class="no-print max-w-7xl w-full mx-auto px-3 sm:px-5 pt-3">
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-3.5 space-y-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">المرحلة والصف:</label>
+          <select id="sel-grade" onchange="updateField('grade', this.value)" class="w-full rounded-xl border border-slate-300 px-3 py-1.5 text-xs font-bold bg-white">
+            <optgroup label="المرحلة الابتدائية">
+              <option>الأول الابتدائي</option><option>الثاني الابتدائي</option><option>الثالث الابتدائي</option>
+              <option>الرابع الابتدائي</option><option>الخامس الابتدائي</option><option>السادس الابتدائي</option>
+            </optgroup>
+            <optgroup label="المرحلة المتوسطة">
+              <option selected>الأول المتوسط</option><option>الثاني المتوسط</option><option>الثالث المتوسط</option>
+            </optgroup>
+            <optgroup label="المرحلة الإعدادية">
+              <option>الرابع العلمي</option><option>الرابع الأدبي</option>
+              <option>الخامس العلمي</option><option>الخامس الأدبي</option>
+              <option>السادس العلمي</option><option>السادس الأدبي</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">المادة الدراسية:</label>
+          <input id="inp-subject" type="text" value="الأحياء" oninput="updateField('subject', this.value)" class="w-full rounded-xl border border-slate-300 px-3 py-1.5 text-xs font-bold" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">قالب الكلايش الجاهزة حسب التخصص:</label>
+          <select id="sel-preset-cat" onchange="applySubjectPreset(this.value)" class="w-full rounded-xl border border-emerald-400 bg-emerald-50 px-3 py-1.5 text-xs font-extrabold text-emerald-900">
+            <option value="">-- اختر كليشة جاهزة لتعبئة الخطة --</option>
+            <option value="science">المواد العلمية (علوم / أحياء / فيزياء / كيمياء)</option>
+            <option value="math">الرياضيات (ابتدائي / متوسط / إعدادي)</option>
+            <option value="arabic">اللغة العربية (قواعد / أدب / قراءة)</option>
+            <option value="social">الاجتماعيات (تاريخ / جغرافية / وطنية)</option>
+            <option value="islamic">التربية الإسلامية</option>
+            <option value="english">اللغة الإنكليزية (English)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">اسم المدرس / المعلم:</label>
+          <input id="inp-teacher" type="text" value="الأستاذ بشير باسم عبدالله" oninput="updateField('teacher', this.value)" class="w-full rounded-xl border border-slate-300 px-3 py-1.5 text-xs font-bold" />
+        </div>
+      </div>
+
+      <!-- أزرار إضافة سريعة للوسائل والطرق -->
+      <div class="border-t border-slate-100 pt-2.5 flex flex-wrap items-center gap-1.5 text-[11px] font-bold">
+        <span class="text-slate-600 ml-1">إدراج سريع للوسائل:</span>
+        <button onclick="appendToField('tools', 'السبورة والأقلام الملونة')" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200">+ السبورة والأقلام</button>
+        <button onclick="appendToField('tools', 'الكتاب المدرسي')" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200">+ الكتاب المدرسي</button>
+        <button onclick="appendToField('tools', 'المجهر والشرائح المختبرية')" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200">+ المجهر والمختبر</button>
+        <button onclick="appendToField('tools', 'الخرائط واللوحات التوضيحية')" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200">+ الخرائط واللوحات</button>
+        <button onclick="appendToField('tools', 'جهاز العرض (Data Show)')" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200">+ Data Show</button>
+
+        <span class="text-slate-600 mr-2 ml-1">طرق التدريس:</span>
+        <button onclick="appendToField('methods', 'الإلقاء والمناقشة')" class="px-2 py-1 rounded-lg bg-blue-50 text-blue-800 hover:bg-blue-100">+ الإلقاء والمناقشة</button>
+        <button onclick="appendToField('methods', 'الاستجواب')" class="px-2 py-1 rounded-lg bg-blue-50 text-blue-800 hover:bg-blue-100">+ الاستجواب</button>
+        <button onclick="appendToField('methods', 'التعلم التعاوني (النشط)')" class="px-2 py-1 rounded-lg bg-blue-50 text-blue-800 hover:bg-blue-100">+ التعلم التعاوني</button>
+        <button onclick="appendToField('methods', 'العصف الذهني')" class="px-2 py-1 rounded-lg bg-blue-50 text-blue-800 hover:bg-blue-100">+ العصف الذهني</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ورقة A4 للخطة اليومية -->
+  <main id="daily-plan-view" class="a4-wrapper flex-1">
+    <div class="a4-sheet" id="daily-a4" data-plan-theme="blue">
+      <div class="plan-frame">
+        <div class="plan-banner editable-box" contenteditable="true" id="d-banner" oninput="syncFromEditable('banner', this.innerText)">
+          الخطة اليومية لمادة الأحياء للصف الأول المتوسط
+        </div>
+
+        <table class="plan-table">
+          <tr class="plan-meta-row">
+            <td colspan="2" style="padding:0;">
+              <table style="width:100%; border-collapse:collapse;">
+                <tr>
+                  <td style="width:50%; border:none; border-left:1.3px solid #1f2937; padding:5px 8px;">
+                    الصف والشعبة: <span class="editable-box" style="display:inline-block; width:auto; min-width:120px;" contenteditable="true" id="d-grade" oninput="syncFromEditable('grade', this.innerText)">الأول المتوسط</span>
+                  </td>
+                  <td style="width:50%; border:none; padding:5px 8px;">
+                    اليوم والتاريخ: <span class="editable-box" style="display:inline-block; width:auto; min-width:120px;" contenteditable="true" id="d-date" oninput="syncFromEditable('date', this.innerText)">   /   / ٢٠٢٦</span>
+                  </td>
+                </tr>
+                <tr style="border-top:1.3px solid #1f2937;">
+                  <td style="border:none; border-left:1.3px solid #1f2937; padding:5px 8px;">
+                    الموضوع: <span class="editable-box" style="display:inline-block; width:auto; min-width:140px;" contenteditable="true" id="d-topic" oninput="syncFromEditable('topic', this.innerText)">اكتب عنوان الدرس هنا...</span>
+                  </td>
+                  <td style="border:none; padding:5px 8px;">
+                    عدد الحصص: <span class="editable-box" style="display:inline-block; width:auto; min-width:80px;" contenteditable="true" id="d-periods" oninput="syncFromEditable('periods', this.innerText)">حصة واحدة (45 دقيقة)</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td class="plan-label-cell">الأهداف السلوكية</td>
+            <td><div class="editable-box" contenteditable="true" id="d-objectives" style="min-height:95px;" oninput="syncFromEditable('objectives', this.innerText)"></div></td>
+          </tr>
+          <tr>
+            <td class="plan-label-cell">الوسائل التعليمية</td>
+            <td><div class="editable-box" contenteditable="true" id="d-tools" style="min-height:36px;" oninput="syncFromEditable('tools', this.innerText)"></div></td>
+          </tr>
+          <tr>
+            <td class="plan-label-cell">الطريقة التعليمية</td>
+            <td><div class="editable-box" contenteditable="true" id="d-methods" style="min-height:36px;" oninput="syncFromEditable('methods', this.innerText)"></div></td>
+          </tr>
+          <tr>
+            <td class="plan-label-cell">المقدمة</td>
+            <td><div class="editable-box" contenteditable="true" id="d-intro" style="min-height:48px;" oninput="syncFromEditable('intro', this.innerText)"></div></td>
+          </tr>
+          <tr>
+            <td class="plan-label-cell">العرض</td>
+            <td><div class="editable-box" contenteditable="true" id="d-body" style="min-height:190px;" oninput="syncFromEditable('body', this.innerText)"></div></td>
+          </tr>
+          <tr>
+            <td class="plan-label-cell">القياس والتقويم</td>
+            <td><div class="editable-box" contenteditable="true" id="d-eval" style="min-height:80px;" oninput="syncFromEditable('eval', this.innerText)"></div></td>
+          </tr>
+          <tr>
+            <td class="plan-label-cell">الواجب البيتي</td>
+            <td><div class="editable-box" contenteditable="true" id="d-homework" style="min-height:42px;" oninput="syncFromEditable('homework', this.innerText)"></div></td>
+          </tr>
+        </table>
+
+        <div class="plan-footer">
+          <div>مدرس / معلم المادة: <span class="editable-box" style="display:inline-block; width:auto;" contenteditable="true" id="d-teacher" oninput="syncFromEditable('teacher', this.innerText)">الأستاذ بشير باسم عبدالله</span></div>
+          <div>توقيع مدير المدرسة: ............................</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ورقة A4 للخطة السنوية -->
+  <main id="annual-plan-view" class="a4-wrapper flex-1 hidden">
+    <div class="a4-sheet" id="annual-a4" data-plan-theme="blue">
+      <div class="plan-frame">
+        <div class="plan-banner editable-box" contenteditable="true" id="a-banner" oninput="saveAnnualState()">
+          الخطة السنوية لمادة الأحياء — الصف الأول المتوسط — للعام الدراسي ٢٠٢٦ / ٢٠٢٧
+        </div>
+
+        <table class="annual-table" style="margin-top:4px; flex:1;">
+          <thead>
+            <tr>
+              <th style="width:18%;">الشهر</th>
+              <th style="width:52%;">المفردات والمواضيع المقررة</th>
+              <th style="width:12%;">عدد الحصص</th>
+              <th style="width:18%;">الملاحظات</th>
+            </tr>
+          </thead>
+          <tbody id="annual-tbody"></tbody>
+        </table>
+
+        <div class="plan-footer">
+          <div>مدرس / معلم المادة: <span class="editable-box" style="display:inline-block; width:auto;" contenteditable="true" id="a-teacher" oninput="saveAnnualState()">الأستاذ بشير باسم عبدالله</span></div>
+          <div>توقيع مدير المدرسة: ............................</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="toast-box" class="no-print fixed bottom-5 left-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <script>
+    const DAILY_KEY = 'iraqi_daily_plan_v2';
+    const ANNUAL_KEY = 'iraqi_annual_plan_v2';
+    const LIBRARY_KEY = 'iraqi_plans_library_v2';
+
+    const PRESETS = {
+      science: {
+        objectives: "جعل الطالب بعد انتهاء الدرس قادراً على أن:\n١- يعرّف المفاهيم العلمية الواردة في الدرس بدقة.\n٢- يوضح التركيب أو الآلية العلمية مع ذكر الأمثلة.\n٣- يقارن بين الظواهر أو الأجزاء المدروسة.\n٤- يرسم أو يؤشر الأجزاء الرئيسية بوضوح.",
+        tools: "السبورة - الأقلام الملونة - الكتاب المدرسي - المجسمات واللوحات التوضيحية",
+        methods: "الإلقاء - المناقشة - الاستجواب - التعلم النشط",
+        intro: "أبدأ بتهيئة الصف وشد انتباه الطلبة من خلال مراجعة سريعة للدرس السابق وطرح سؤال تمهيدي لربطه بموضوع اليوم.",
+        body: "بعد تهيئة السبورة وكتابة عنوان الدرس، أبدأ بشرح الموضوع بشكل مفصل ومبسط مع توضيح المصطلحات العلمية ورسم المخططات التوضيحية وإشراك الطلبة بالمناقشة والاستنتاج.\n\nس/ عرّف ما يأتي:\nس/ علّل ما يأتي:\nس/ قارن بين:",
+        eval: "مراجعة سريعة لمحاور الدرس من خلال طرح مجموعة من الأسئلة الشفوية مع إشراك الطلبة الضعفاء:\nس١/ ما أهمية...؟\nس٢/ عدّد أنواع...؟",
+        homework: "كتابة الملخص السبوري في الدفتر + حل أسئلة مراجعة الدرس والتحضير للدرس القادم."
+      },
+      math: {
+        objectives: "جعل الطالب بعد انتهاء الدرس قادراً على أن:\n١- يتعرف على المفهوم والقانون الرياضي الجديد.\n٢- يطبق الخطوات الصحيحة في حل الأمثلة والتمارين.\n٣- يميز بين الحالات المختلفة للمسائل الرياضية.\n٤- يتحقق من صحة الحل بدقة.",
+        tools: "السبورة - الأقلام الملونة - الكتاب المدرسي - الأدوات الهندسية",
+        methods: "الإلقاء - المناقشة - الاستنتاج - حل المشكلات",
+        intro: "تهيئة الطلبة ومراجعة القوانين والعمليات الأساسية السابقة المرتبطة بموضوع الدرس الحالي.",
+        body: "كتابة عنوان الدرس والقواعد الأساسية على السبورة، ثم شرح مثال نموذجي خطوة بخطوة مع توضيح الأفكار الدقيقة، وبعدها إشراك الطلبة في حل أمثلة إضافية على السبورة وتصويب الأخطاء.\n\nمثال (١):\nمثال (٢):",
+        eval: "إعطاء تمرين سريع للطلبة لحله في الدفاتر ومتابعة حلولهم مع مساعدة الطلبة الضعفاء.",
+        homework: "حل تمارين (تأكد من فهمك) في الدفتر وتحضير الدرس القادم."
+      },
+      arabic: {
+        objectives: "جعل الطالب بعد انتهاء الدرس قادراً على أن:\n١- يقرأ النص قراءة سليمة معبرة ومضبوطة بالشكل.\n٢- يفهم القاعدة النحوية أو الفكرة العامة للنص.\n٣- يستخرج الشواهد والأمثلة ويُعربها إعراباً صحيحاً.\n٤- يوظف القاعدة في جمل مفيدة من إنشائه.",
+        tools: "السبورة - الأقلام الملونة - الكتاب المدرسي - بطاقات الأمثلة",
+        methods: "الطريقة الاستقرائية - المناقشة - الاستجواب - التعلم التعاوني",
+        intro: "تهيئة الصف ومراجعة الدرس السابق عبر طرح أسئلة سريعة وربطها بموضوع اليوم.",
+        body: "كتابة الأمثلة والشواهد على السبورة وقراءتها بوضوح، ثم مناقشة الطلبة لاستنتاج القاعدة أو معاني المفردات، وتدوين الخلاصة على السبورة مع تطبيقات عملية.\n\nس/ استخرج من النص:\nس/ أعرب ما تحته خط:",
+        eval: "توجيه أسئلة تطبيقية للطلبة للتأكد من استيعاب القاعدة والتركيز على مشاركة الطلبة الضعفاء.",
+        homework: "حل التمرينات في الدفتر وكتابة الملخص السبوري."
+      },
+      social: {
+        objectives: "أن يكون الطالب بعد انتهاء الدرس قادراً على أن:\n١- يتعرف على أهمية الموضوع التاريخية أو الجغرافية.\n٢- يوضح الأقسام والعوامل المؤثرة في الظاهرة.\n٣- يحدد المواقع والمعالم الرئيسية على الخريطة.\n٤- يستنتج الأثر الاقتصادي أو الاجتماعي للموضوع.",
+        tools: "السبورة - الخريطة - الأقلام الملونة - الكتاب المدرسي",
+        methods: "الإلقاء - الاستجواب - المناقشة - التعلم التعاوني (التعلم النشط)",
+        intro: "أبدأ بتهيئة الطلبة وشد انتباههم في ضوء المراجعة للدرس السابق وربطه بالدرس الحالي.",
+        body: "بعد تهيئة الصف والسبورة أقوم بكتابة الموضوع الجديد وأبدأ بشرحه بشكل مفصل ومبسط مع توضيح المصطلحات وتوجيه أنظار الطلبة إلى الخريطة وصور الدرس باستخدام المناقشة والاستجواب.\n\nس/ عرّف ما يأتي:\nس/ قارن بين:\nس/ عدّد أهم...:",
+        eval: "مراجعة الموضوع من خلال طرح مجموعة من الأسئلة مع مشاركة الطلبة الضعفاء:\nس/ ما هي الخصائص الأساسية لـ...؟",
+        homework: "كتابة الملخص السبوري في الدفتر - تحضير الدرس القادم وحل أسئلة الفصل."
+      },
+      islamic: {
+        objectives: "جعل الطالب بعد انتهاء الدرس قادراً على أن:\n١- يتلو الآيات الكريمة أو يقرأ الحديث الشريف قراءة سليمة.\n٢- يفهم معاني الكلمات والمفردات الواردة.\n٣- يستنبط الأحكام والعبر والدروس التربوية.\n٤- يلتزم بالقيم الإسلامية في سلوكه اليومي.",
+        tools: "السبورة - المصحف الشريف - الأقلام الملونة - الكتاب المدرسي",
+        methods: "التلاوة النموذجية - الإلقاء - المناقشة - الاستجواب",
+        intro: "تهيئة الصف بذكر الله ومراجعة الدرس السابق وربطه بموضوع اليوم.",
+        body: "تلاوة النص الشرعي قراءة نموذجية ثم قراءة الطلبة وتصحيح التلاوة، يلي ذلك بيان معاني المفردات وشرح المعنى العام واستخراج أهم ما يرشد إليه النص.\n\nس/ بيّن معاني الكلمات الآتية:\nس/ ما أهم ما يرشد إليه الدرس؟",
+        eval: "طرح أسئلة شفوية حول المعنى العام والأحكام مع إشراك جميع الطلبة.",
+        homework: "حفظ النص المقرر مع المعاني وحل أسئلة المناقشة في الدفتر."
+      },
+      english: {
+        objectives: "By the end of the lesson, students will be able to:\n1- Recognize and pronounce the new vocabulary correctly.\n2- Understand and use the target grammar structure.\n3- Practice reading/listening and answer comprehension questions.",
+        tools: "Whiteboard - Colored Markers - Student's Book - Activity Book - Flashcards",
+        methods: "Communicative Approach - Discussion - Pair & Group Work",
+        intro: "Warm-up: Greeting students, reviewing the previous lesson, and introducing the new topic.",
+        body: "Presenting the new vocabulary and grammar rules clearly on the board with examples. Guiding students through Student's Book exercises and practicing dialogues in pairs.",
+        eval: "Asking quick oral questions and checking students' participation and understanding.",
+        homework: "Completing the exercises in the Activity Book and preparing the next lesson."
+      }
+    };
+
+    const ANNUAL_MONTHS = [
+      { month: 'تشرين الأول', topics: 'الفصل الأول: ...', periods: '', notes: '' },
+      { month: 'تشرين الثاني', topics: 'الفصل الثاني: ...', periods: '', notes: 'امتحان الشهر الأول' },
+      { month: 'كانون الأول', topics: 'الفصل الثالث: ...', periods: '', notes: 'امتحان الشهر الثاني' },
+      { month: 'كانون الثاني', topics: 'مراجعة عامة + امتحانات نصف السنة', periods: '', notes: 'عطلة نصف السنة' },
+      { month: 'شباط', topics: 'بداية الفصل الثاني — الفصل الرابع: ...', periods: '', notes: '' },
+      { month: 'آذار', topics: 'الفصل الخامس: ...', periods: '', notes: 'امتحان الشهر الأول' },
+      { month: 'نيسان', topics: 'الفصل السادس: ...', periods: '', notes: 'امتحان الشهر الثاني' },
+      { month: 'أيار', topics: 'مراجعة شاملة للمنهج + الامتحانات النهائية', periods: '', notes: '' }
+    ];
+
+    let currentMode = 'daily';
+    let dailyState = {
+      grade: 'الأول المتوسط',
+      subject: 'الأحياء',
+      banner: 'الخطة اليومية لمادة الأحياء للصف الأول المتوسط',
+      date: '   /   / ٢٠٢٦',
+      topic: 'اكتب عنوان الدرس هنا...',
+      periods: 'حصة واحدة (45 دقيقة)',
+      teacher: 'الأستاذ بشير باسم عبدالله',
+      ...PRESETS.science
+    };
+
+    let annualState = {
+      banner: 'الخطة السنوية لمادة الأحياء — الصف الأول المتوسط — للعام الدراسي ٢٠٢٦ / ٢٠٢٧',
+      teacher: 'الأستاذ بشير باسم عبدالله',
+      rows: JSON.parse(JSON.stringify(ANNUAL_MONTHS))
+    };
+
+    function showToast(msg) {
+      const box = document.getElementById('toast-box');
+      const el = document.createElement('div');
+      el.className = 'px-4 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold shadow-lg';
+      el.textContent = msg;
+      box.appendChild(el);
+      setTimeout(() => el.remove(), 2500);
+    }
+
+    function renderDaily() {
+      document.getElementById('sel-grade').value = dailyState.grade;
+      document.getElementById('inp-subject').value = dailyState.subject;
+      document.getElementById('inp-teacher').value = dailyState.teacher;
+
+      const map = {
+        'd-banner': dailyState.banner,
+        'd-grade': dailyState.grade,
+        'd-date': dailyState.date,
+        'd-topic': dailyState.topic,
+        'd-periods': dailyState.periods,
+        'd-objectives': dailyState.objectives,
+        'd-tools': dailyState.tools,
+        'd-methods': dailyState.methods,
+        'd-intro': dailyState.intro,
+        'd-body': dailyState.body,
+        'd-eval': dailyState.eval,
+        'd-homework': dailyState.homework,
+        'd-teacher': dailyState.teacher
+      };
+      for (const [id, val] of Object.entries(map)) {
+        const el = document.getElementById(id);
+        if (el && document.activeElement !== el) el.innerText = val || '';
+      }
+    }
+
+    function renderAnnual() {
+      document.getElementById('a-banner').innerText = annualState.banner;
+      document.getElementById('a-teacher').innerText = annualState.teacher;
+      const tbody = document.getElementById('annual-tbody');
+      tbody.innerHTML = annualState.rows.map((r, i) => `
+        <tr>
+          <td style="background:var(--plan-label-bg); font-weight:800; text-align:center;">
+            <div class="editable-box" contenteditable="true" oninput="annualState.rows[${i}].month=this.innerText; saveAnnualState()">${r.month}</div>
+          </td>
+          <td><div class="editable-box" contenteditable="true" style="min-height:48px;" oninput="annualState.rows[${i}].topics=this.innerText; saveAnnualState()">${r.topics}</div></td>
+          <td style="text-align:center;"><div class="editable-box" contenteditable="true" oninput="annualState.rows[${i}].periods=this.innerText; saveAnnualState()">${r.periods}</div></td>
+          <td><div class="editable-box" contenteditable="true" oninput="annualState.rows[${i}].notes=this.innerText; saveAnnualState()">${r.notes}</div></td>
+        </tr>
+      `).join('');
+    }
+
+    function updateField(key, val) {
+      dailyState[key] = val;
+      if (key === 'grade' || key === 'subject') {
+        dailyState.banner = `الخطة اليومية لمادة ${dailyState.subject} للصف ${dailyState.grade}`;
+        annualState.banner = `الخطة السنوية لمادة ${dailyState.subject} — الصف ${dailyState.grade} — للعام الدراسي ٢٠٢٦ / ٢٠٢٧`;
+        document.getElementById('a-banner').innerText = annualState.banner;
+      }
+      if (key === 'teacher') {
+        annualState.teacher = val;
+        document.getElementById('a-teacher').innerText = val;
+      }
+      saveDailyState();
+      renderDaily();
+    }
+
+    function syncFromEditable(key, val) {
+      dailyState[key] = val;
+      saveDailyState();
+    }
+
+    function applySubjectPreset(cat) {
+      if (!cat || !PRESETS[cat]) return;
+      Object.assign(dailyState, PRESETS[cat]);
+      saveDailyState();
+      renderDaily();
+      showToast('تم تطبيق الكليشة الجاهزة بنجاح');
+    }
+
+    function appendToField(key, text) {
+      const cur = (dailyState[key] || '').trim();
+      if (!cur.includes(text)) {
+        dailyState[key] = cur ? cur + ' - ' + text : text;
+        saveDailyState();
+        renderDaily();
+      }
+    }
+
+    function switchPlanMode(mode) {
+      currentMode = mode;
+      const isDaily = mode === 'daily';
+      document.getElementById('daily-plan-view').classList.toggle('hidden', !isDaily);
+      document.getElementById('templates-toolbar').classList.toggle('hidden', !isDaily);
+      document.getElementById('annual-plan-view').classList.toggle('hidden', isDaily);
+
+      document.getElementById('mode-btn-daily').className = isDaily
+        ? 'px-4 py-1.5 rounded-xl text-xs sm:text-sm font-extrabold bg-slate-900 text-white transition'
+        : 'px-4 py-1.5 rounded-xl text-xs sm:text-sm font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition';
+      document.getElementById('mode-btn-annual').className = !isDaily
+        ? 'px-4 py-1.5 rounded-xl text-xs sm:text-sm font-extrabold bg-slate-900 text-white transition'
+        : 'px-4 py-1.5 rounded-xl text-xs sm:text-sm font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition';
+    }
+
+    function changeTheme(theme) {
+      document.getElementById('daily-a4').setAttribute('data-plan-theme', theme);
+      document.getElementById('annual-a4').setAttribute('data-plan-theme', theme);
+      localStorage.setItem('iraqi_plan_theme', theme);
+    }
+
+    function saveDailyState() { localStorage.setItem(DAILY_KEY, JSON.stringify(dailyState)); }
+    function saveAnnualState() {
+      annualState.banner = document.getElementById('a-banner').innerText;
+      annualState.teacher = document.getElementById('a-teacher').innerText;
+      localStorage.setItem(ANNUAL_KEY, JSON.stringify(annualState));
+    }
+
+    function getLibrary() {
+      try { return JSON.parse(localStorage.getItem(LIBRARY_KEY) || '[]'); } catch { return []; }
+    }
+
+    function renderLibrarySelect() {
+      const lib = getLibrary();
+      const sel = document.getElementById('saved-plans-select');
+      sel.innerHTML = `<option value="">📂 خططي المحفوظة (${lib.length})</option>` +
+        lib.map(item => `<option value="${item.id}">${item.type === 'daily' ? '📄' : '📅'} ${item.title}</option>`).join('');
+    }
+
+    function saveCurrentPlanToLibrary() {
+      const lib = getLibrary();
+      const title = currentMode === 'daily'
+        ? `${dailyState.subject} - ${dailyState.topic.slice(0, 22)}`
+        : `سنوية: ${dailyState.subject} (${dailyState.grade})`;
+      lib.unshift({
+        id: 'p_' + Date.now(),
+        type: currentMode,
+        title,
+        data: JSON.parse(JSON.stringify(currentMode === 'daily' ? dailyState : annualState))
+      });
+      localStorage.setItem(LIBRARY_KEY, JSON.stringify(lib));
+      renderLibrarySelect();
+      showToast('تم حفظ الخطة في مكتبتك بنجاح');
+    }
+
+    function loadSavedPlan(id) {
+      if (!id) return;
+      const item = getLibrary().find(x => x.id === id);
+      if (!item) return;
+      if (item.type === 'daily') {
+        dailyState = JSON.parse(JSON.stringify(item.data));
+        saveDailyState();
+        renderDaily();
+        switchPlanMode('daily');
+      } else {
+        annualState = JSON.parse(JSON.stringify(item.data));
+        saveAnnualState();
+        renderAnnual();
+        switchPlanMode('annual');
+      }
+      showToast('تم فتح الخطة المحفوظة');
+    }
+
+    function deleteSelectedSavedPlan() {
+      const sel = document.getElementById('saved-plans-select');
+      if (!sel.value) return;
+      const lib = getLibrary().filter(x => x.id !== sel.value);
+      localStorage.setItem(LIBRARY_KEY, JSON.stringify(lib));
+      renderLibrarySelect();
+      showToast('تم حذف الخطة من المكتبة');
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      try {
+        const d = localStorage.getItem(DAILY_KEY);
+        if (d) dailyState = Object.assign(dailyState, JSON.parse(d));
+        const a = localStorage.getItem(ANNUAL_KEY);
+        if (a) annualState = Object.assign(annualState, JSON.parse(a));
+        const th = localStorage.getItem('iraqi_plan_theme');
+        if (th) { document.getElementById('theme-select').value = th; changeTheme(th); }
+      } catch {}
+      renderDaily();
+      renderAnnual();
+      renderLibrarySelect();
+    });
+  </script>
+</body>
+</html>
