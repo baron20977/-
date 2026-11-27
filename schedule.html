@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>الجدول المدرسي الذكي - العراق</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --tbl-header-bg: #e0f2fe;
+      --tbl-day-bg: #f1f5f9;
+      --tbl-accent: #0c4a6e;
+      --tbl-border: #1f2937;
+    }
+    [data-sched-theme="green"] {
+      --tbl-header-bg: #dcfce7;
+      --tbl-day-bg: #f0fdf4;
+      --tbl-accent: #14532d;
+    }
+    [data-sched-theme="bw"] {
+      --tbl-header-bg: #f3f4f6;
+      --tbl-day-bg: #f9fafb;
+      --tbl-accent: #111827;
+    }
+
+    body {
+      font-family: 'Cairo', 'Tajawal', 'Segoe UI', Tahoma, Arial, sans-serif;
+      background-color: #f1f5f9;
+      color: #0f172a;
+    }
+
+    .a4-landscape-wrapper {
+      overflow-x: auto;
+      padding: 1rem 0.5rem 2.5rem;
+    }
+
+    .a4-landscape {
+      width: 297mm;
+      min-height: 210mm;
+      background: #ffffff;
+      margin: 0 auto;
+      padding: 8mm;
+      box-sizing: border-box;
+      box-shadow: 0 12px 30px -8px rgba(15, 23, 42, 0.16);
+      border-radius: 6px;
+      color: #000;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sched-frame {
+      border: 2px solid var(--tbl-border);
+      padding: 4mm;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sched-banner {
+      background-color: var(--tbl-header-bg);
+      border: 1.5px solid var(--tbl-border);
+      text-align: center;
+      font-size: 16px;
+      font-weight: 800;
+      padding: 6px 12px;
+      margin-bottom: 8px;
+      color: var(--tbl-accent);
+      border-radius: 6px;
+    }
+
+    .sched-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 11.5px;
+    }
+
+    .sched-table th,
+    .sched-table td {
+      border: 1.2px solid var(--tbl-border);
+      text-align: center;
+      vertical-align: middle;
+      padding: 4px 3px;
+    }
+
+    .sched-table thead th {
+      background-color: var(--tbl-header-bg);
+      color: var(--tbl-accent);
+      font-weight: 800;
+      font-size: 12px;
+      padding: 6px 3px;
+    }
+
+    .day-cell {
+      background-color: var(--tbl-day-bg);
+      font-weight: 800;
+      font-size: 12px;
+      width: 72px;
+    }
+
+    .yard-col {
+      width: 115px;
+      background-color: #fffbeb;
+    }
+
+    .yard-input {
+      width: 100%;
+      min-height: 36px;
+      outline: none;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1.35;
+      white-space: pre-wrap;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      border-radius: 4px;
+    }
+
+    .yard-input:focus {
+      background-color: #fef9c3;
+    }
+
+    .slot-cell {
+      cursor: pointer;
+      transition: background-color 0.15s;
+      height: 46px;
+      position: relative;
+    }
+
+    .slot-cell:hover {
+      background-color: #fef9c3;
+    }
+
+    .slot-subject {
+      font-weight: 800;
+      font-size: 11.5px;
+      color: #0f172a;
+      line-height: 1.25;
+    }
+
+    .slot-teacher {
+      font-weight: 600;
+      font-size: 10px;
+      color: #475569;
+      margin-top: 2px;
+      line-height: 1.2;
+    }
+
+    .slot-conflict {
+      background-color: #fee2e2 !important;
+      outline: 2px solid #dc2626;
+    }
+
+    .sched-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+      padding-top: 6px;
+      font-size: 12.5px;
+      font-weight: 800;
+    }
+
+    .editable-inline {
+      outline: none;
+      border-radius: 4px;
+      padding: 0 4px;
+    }
+    .editable-inline:focus {
+      background-color: #fef9c3;
+    }
+
+    @page {
+      size: A4 landscape;
+      margin: 7mm;
+    }
+
+    @media print {
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      body { background: #fff !important; margin: 0 !important; }
+      .no-print { display: none !important; }
+      .a4-landscape-wrapper { overflow: visible !important; padding: 0 !important; }
+      .a4-landscape {
+        width: 100% !important;
+        min-height: 195mm !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+      }
+      .yard-col { background-color: transparent !important; }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- الشريط العلوي -->
+  <header class="no-print bg-slate-900 text-white shadow-md sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-3 sm:px-5 py-2.5 flex flex-wrap items-center justify-between gap-2.5">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-inner shrink-0 font-extrabold text-lg">🗓️</div>
+        <div>
+          <h1 class="text-sm sm:text-base font-extrabold leading-tight">الجدول المدرسي الذكي - العراق</h1>
+          <p class="text-[11px] sm:text-xs text-slate-300">توزيع تلقائي ويدوي مع منع تعارض حصص المدرسين • طباعة A4 أفقية</p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+        <a href="index.html" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs sm:text-sm font-bold text-amber-300 transition">📝 الأسئلة</a>
+        <a href="grades.html" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs sm:text-sm font-bold text-emerald-300 transition">📊 الدرجات</a>
+        <a href="plans.html" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs sm:text-sm font-bold text-sky-300 transition">📘 الخطة</a>
+        <button onclick="window.print()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs sm:text-sm font-extrabold text-white shadow transition">🖨️ طباعة الجدول</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- شريط التحكم السريع -->
+  <section class="no-print bg-white border-b border-slate-200 sticky top-[58px] z-20">
+    <div class="max-w-7xl mx-auto px-3 sm:px-5 py-2 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex flex-wrap items-center gap-1.5">
+        <button onclick="switchView('class')" id="view-btn-class" class="px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-extrabold bg-slate-900 text-white transition">🏫 جدول الشعبة</button>
+        <button onclick="switchView('teacher')" id="view-btn-teacher" class="px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition">👨‍🏫 جدول المدرس</button>
+        <button onclick="openSetupModal()" class="px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-extrabold bg-indigo-50 text-indigo-800 border border-indigo-200 hover:bg-indigo-100 transition">⚙️ إدارة المدرسين والشعب</button>
+        <button onclick="autoGenerateTimetable()" class="px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-extrabold bg-amber-500 hover:bg-amber-600 text-white shadow-xs transition">⚡ توزيع تلقائي ذكي</button>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <select id="active-filter-select" onchange="onFilterChange(this.value)" class="rounded-xl border border-slate-300 bg-slate-50 px-3 py-1.5 text-xs sm:text-sm font-extrabold text-slate-900"></select>
+
+        <!-- خيار إظهار/إخفاء عمود مراقبي الساحة -->
+        <label class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs font-extrabold cursor-pointer select-none">
+          <input type="checkbox" id="chk-yard-monitors" onchange="toggleYardMonitors(this.checked)" class="w-3.5 h-3.5 accent-amber-600" />
+          <span>مراقبو الساحة</span>
+        </label>
+
+        <select id="periods-count-select" onchange="changePeriodsCount(Number(this.value))" class="rounded-xl border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-bold">
+          <option value="5">5 حصص يومياً</option>
+          <option value="6" selected>6 حصص يومياً</option>
+          <option value="7">7 حصص يومياً</option>
+        </select>
+
+        <select id="theme-select" onchange="changeTheme(this.value)" class="rounded-xl border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-bold">
+          <option value="blue">أزرق رسمي</option>
+          <option value="green">أخضر رسمي</option>
+          <option value="bw">أبيض وأسود</option>
+        </select>
+
+        <button onclick="clearCurrentSchedule()" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold">تصفير</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ورقة A4 الأفقية للجدول -->
+  <main class="a4-landscape-wrapper flex-1">
+    <div class="a4-landscape" id="a4-sheet" data-sched-theme="blue">
+      <div class="sched-frame">
+        <div class="flex items-center justify-between text-xs font-bold text-slate-700 mb-1.5 px-1">
+          <div>المدرسة: <span id="hdr-school" class="editable-inline font-extrabold text-black" contenteditable="true" oninput="saveHeaderInfo()">جبة</span></div>
+          <div>العام الدراسي: <span id="hdr-year" class="editable-inline font-extrabold text-black" contenteditable="true" oninput="saveHeaderInfo()">٢٠٢٦ - ٢٠٢٧</span></div>
+        </div>
+
+        <div class="sched-banner" id="sched-title-banner">الجدول الأسبوعي للدروس</div>
+
+        <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+          <table class="sched-table" id="main-sched-table">
+            <thead id="sched-thead"></thead>
+            <tbody id="sched-tbody"></tbody>
+          </table>
+        </div>
+
+        <div class="sched-footer">
+          <div>تنظيم الجدول: <span id="hdr-organizer" class="editable-inline" contenteditable="true" oninput="saveHeaderInfo()">الأستاذ بشير باسم عبدالله</span></div>
+          <div>مدير المدرسة: <span id="hdr-principal" class="editable-inline" contenteditable="true" oninput="saveHeaderInfo()">بشير باسم عبدالله</span></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- نافذة اختيار حصة -->
+  <div id="slot-modal" class="no-print fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-3">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+      <div class="px-5 py-3.5 bg-slate-900 text-white flex items-center justify-between">
+        <div>
+          <h3 class="text-sm font-extrabold">تحديد الدرس والمدرس</h3>
+          <p id="slot-modal-sub" class="text-[11px] text-amber-300 font-bold"></p>
+        </div>
+        <button onclick="closeSlotModal()" class="text-slate-300 hover:text-white text-xl font-bold px-2">&times;</button>
+      </div>
+      <div class="p-5 space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">اختر المدرس والمادة:</label>
+          <select id="slot-teacher-select" onchange="checkSlotConflictPreview()" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm font-bold bg-white"></select>
+        </div>
+        <div id="slot-conflict-warning" class="hidden bg-rose-50 border border-rose-300 text-rose-700 rounded-xl p-2.5 text-xs font-bold"></div>
+      </div>
+      <div class="px-5 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-2">
+        <button onclick="clearActiveSlot()" class="px-3.5 py-2 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-700 text-xs font-extrabold">تفريغ الحصة</button>
+        <div class="flex gap-2">
+          <button onclick="closeSlotModal()" class="px-3.5 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold">إلغاء</button>
+          <button id="slot-save-btn" onclick="saveActiveSlot()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold">حفظ الحصة</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- نافذة إدارة المدرسين والشعب -->
+  <div id="setup-modal" class="no-print fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-50 hidden items-center justify-center p-3">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full overflow-hidden flex flex-col max-h-[90vh]">
+      <div class="px-5 py-3.5 bg-slate-900 text-white flex items-center justify-between">
+        <h2 class="text-base font-extrabold">⚙️ إدارة المدرسين والشعب</h2>
+        <button onclick="closeSetupModal()" class="text-slate-300 hover:text-white text-2xl font-bold px-2">&times;</button>
+      </div>
+
+      <div class="p-4 sm:p-5 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div class="space-y-3">
+          <h3 class="text-sm font-extrabold text-slate-900 border-b pb-1.5">🏫 الصفوف والشعب</h3>
+          <div class="flex gap-2">
+            <input id="new-class-name" type="text" placeholder="مثلاً: الأول المتوسط أ" class="flex-1 rounded-xl border border-slate-300 px-3 py-1.5 text-xs font-bold" onkeydown="if(event.key==='Enter') addClass()" />
+            <button onclick="addClass()" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold">+ إضافة</button>
+          </div>
+          <div id="classes-list" class="space-y-1.5 max-h-60 overflow-y-auto"></div>
+        </div>
+
+        <div class="space-y-3">
+          <h3 class="text-sm font-extrabold text-slate-900 border-b pb-1.5">👨‍🏫 الكادر التدريسي والمواد</h3>
+          <div class="grid grid-cols-2 gap-2">
+            <input id="new-teacher-name" type="text" placeholder="اسم المدرس (مثلاً: أ. بشير)" class="rounded-xl border border-slate-300 px-3 py-1.5 text-xs font-bold" />
+            <input id="new-teacher-subject" type="text" placeholder="المادة (مثلاً: الأحياء)" class="rounded-xl border border-slate-300 px-3 py-1.5 text-xs font-bold" onkeydown="if(event.key==='Enter') addTeacher()" />
+          </div>
+          <button onclick="addTeacher()" class="w-full py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold">+ إضافة مدرس</button>
+          <div id="teachers-list" class="space-y-1.5 max-h-60 overflow-y-auto"></div>
+        </div>
+      </div>
+
+      <div class="px-5 py-3 bg-slate-50 border-t border-slate-200 flex justify-end">
+        <button onclick="closeSetupModal()" class="px-5 py-2 rounded-xl bg-slate-900 text-white text-xs font-extrabold">تم وإغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-box" class="no-print fixed bottom-5 left-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <script>
+    const STORAGE_KEY = 'iraqi_smart_schedule_v2';
+    const DAYS = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'];
+    const PERIOD_NAMES = ['الأولى', 'الثانية', 'الثالثة', 'الرابعة', 'الخامسة', 'السادسة', 'السابعة'];
+
+    let state = {
+      school: 'جبة',
+      year: '٢٠٢٦ - ٢٠٢٧',
+      organizer: 'الأستاذ بشير باسم عبدالله',
+      principal: 'بشير باسم عبدالله',
+      periodsCount: 6,
+      theme: 'blue',
+      showYardMonitors: false,
+      yardMonitors: ['', '', '', '', ''],
+      classes: [
+        { id: 'c1', name: 'الأول المتوسط أ' },
+        { id: 'c2', name: 'الأول المتوسط ب' },
+        { id: 'c3', name: 'الثاني المتوسط أ' }
+      ],
+      teachers: [
+        { id: 't1', name: 'أ. بشير باسم', subject: 'الأحياء' },
+        { id: 't2', name: 'أ. علي حسن', subject: 'الرياضيات' },
+        { id: 't3', name: 'أ. محمد جاسم', subject: 'اللغة العربية' },
+        { id: 't4', name: 'أ. عمر خالد', subject: 'الإنكليزية' },
+        { id: 't5', name: 'أ. سعد كريم', subject: 'الاجتماعيات' },
+        { id: 't6', name: 'أ. أحمد طارق', subject: 'الإسلامية' }
+      ],
+      timetable: {}
+    };
+
+    let currentView = 'class';
+    let activeFilterId = 'c1';
+    let editingSlot = null;
+
+    function showToast(msg, type = 'info') {
+      const box = document.getElementById('toast-box');
+      const el = document.createElement('div');
+      const bg = type === 'error' ? 'bg-rose-600' : (type === 'success' ? 'bg-emerald-600' : 'bg-slate-900');
+      el.className = `px-4 py-2.5 rounded-xl ${bg} text-white text-xs font-bold shadow-lg`;
+      el.textContent = msg;
+      box.appendChild(el);
+      setTimeout(() => el.remove(), 2600);
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && Array.isArray(parsed.classes)) {
+            state = Object.assign(state, parsed);
+          }
+        }
+      } catch {}
+      if (!Array.isArray(state.yardMonitors) || state.yardMonitors.length < 5) {
+        state.yardMonitors = ['', '', '', '', ''];
+      }
+      if (state.classes.length > 0) activeFilterId = state.classes[0].id;
+    }
+
+    function toggleYardMonitors(checked) {
+      state.showYardMonitors = checked;
+      saveState();
+      renderTable();
+    }
+
+    function updateYardMonitor(dayIdx, text) {
+      state.yardMonitors[dayIdx] = text;
+      saveState();
+    }
+
+    function getSlot(classId, d, p) {
+      return state.timetable?.[classId]?.[d]?.[p] || null;
+    }
+
+    function setSlot(classId, d, p, teacherId) {
+      if (!state.timetable[classId]) state.timetable[classId] = {};
+      if (!state.timetable[classId][d]) state.timetable[classId][d] = {};
+      state.timetable[classId][d][p] = teacherId || null;
+    }
+
+    function findTeacherConflict(teacherId, dayIdx, periodIdx, excludeClassId = null) {
+      if (!teacherId) return null;
+      for (const cls of state.classes) {
+        if (cls.id === excludeClassId) continue;
+        if (getSlot(cls.id, dayIdx, periodIdx) === teacherId) return cls;
+      }
+      return null;
+    }
+
+    function renderFilterSelect() {
+      const sel = document.getElementById('active-filter-select');
+      if (currentView === 'class') {
+        sel.innerHTML = state.classes.map(c => `<option value="${c.id}">شعبة: ${c.name}</option>`).join('');
+        if (!state.classes.some(c => c.id === activeFilterId) && state.classes.length) activeFilterId = state.classes[0].id;
+      } else {
+        sel.innerHTML = state.teachers.map(t => `<option value="${t.id}">${t.name} (${t.subject})</option>`).join('');
+        if (!state.teachers.some(t => t.id === activeFilterId) && state.teachers.length) activeFilterId = state.teachers[0].id;
+      }
+      sel.value = activeFilterId;
+    }
+
+    function renderTable() {
+      const pCount = state.periodsCount || 6;
+      const showYard = !!state.showYardMonitors;
+      const thead = document.getElementById('sched-thead');
+      const tbody = document.getElementById('sched-tbody');
+      const banner = document.getElementById('sched-title-banner');
+
+      let headHtml = `<tr><th class="day-cell">اليوم / الحصة</th>`;
+      for (let p = 0; p < pCount; p++) {
+        headHtml += `<th>الحصة ${PERIOD_NAMES[p] || (p + 1)}</th>`;
+      }
+      if (showYard) {
+        headHtml += `<th class="yard-col">مراقبو الساحة</th>`;
+      }
+      headHtml += `</tr>`;
+      thead.innerHTML = headHtml;
+
+      let bodyHtml = '';
+      if (currentView === 'class') {
+        const cls = state.classes.find(c => c.id === activeFilterId);
+        banner.textContent = cls ? `الجدول الأسبوعي للدروس — ${cls.name}` : 'الجدول الأسبوعي للدروس';
+
+        for (let d = 0; d < DAYS.length; d++) {
+          bodyHtml += `<tr><td class="day-cell">${DAYS[d]}</td>`;
+          for (let p = 0; p < pCount; p++) {
+            const tId = cls ? getSlot(cls.id, d, p) : null;
+            const teacher = state.teachers.find(t => t.id === tId);
+            const conflictCls = tId ? findTeacherConflict(tId, d, p, cls.id) : null;
+            bodyHtml += `
+              <td class="slot-cell ${conflictCls ? 'slot-conflict' : ''}" onclick="openSlotModal('${cls?.id}', ${d}, ${p})">
+                ${teacher ? `
+                  <div class="slot-subject">${teacher.subject}</div>
+                  <div class="slot-teacher">${teacher.name}</div>
+                ` : `<span class="text-slate-300 text-[10px] no-print">+ إضافة</span>`}
+              </td>`;
+          }
+          if (showYard) {
+            bodyHtml += `
+              <td class="yard-col">
+                <div class="yard-input" contenteditable="true" oninput="updateYardMonitor(${d}, this.innerText)">${state.yardMonitors[d] || ''}</div>
+              </td>`;
+          }
+          bodyHtml += `</tr>`;
+        }
+      } else {
+        const teacher = state.teachers.find(t => t.id === activeFilterId);
+        banner.textContent = teacher ? `جدول حصص المدرس: ${teacher.name} (${teacher.subject})` : 'جدول المدرس';
+
+        for (let d = 0; d < DAYS.length; d++) {
+          bodyHtml += `<tr><td class="day-cell">${DAYS[d]}</td>`;
+          for (let p = 0; p < pCount; p++) {
+            const assignedClasses = state.classes.filter(c => getSlot(c.id, d, p) === activeFilterId);
+            const hasConflict = assignedClasses.length > 1;
+            bodyHtml += `
+              <td class="slot-cell ${hasConflict ? 'slot-conflict' : ''}">
+                ${assignedClasses.length > 0 ? assignedClasses.map(c => `
+                  <div class="slot-subject">${c.name}</div>
+                `).join('') : `<span class="text-slate-300 text-[10px]">فراغ</span>`}
+              </td>`;
+          }
+          if (showYard) {
+            bodyHtml += `
+              <td class="yard-col">
+                <div class="yard-input" contenteditable="true" oninput="updateYardMonitor(${d}, this.innerText)">${state.yardMonitors[d] || ''}</div>
+              </td>`;
+          }
+          bodyHtml += `</tr>`;
+        }
+      }
+      tbody.innerHTML = bodyHtml;
+    }
+
+    function openSlotModal(classId, dayIdx, periodIdx) {
+      if (!classId) return;
+      editingSlot = { classId, dayIdx, periodIdx };
+      const cls = state.classes.find(c => c.id === classId);
+      document.getElementById('slot-modal-sub').textContent = `${cls?.name} — يوم ${DAYS[dayIdx]} — الحصة ${PERIOD_NAMES[periodIdx]}`;
+
+      const sel = document.getElementById('slot-teacher-select');
+      const curTId = getSlot(classId, dayIdx, periodIdx);
+      sel.innerHTML = `<option value="">-- بدون درس (فراغ) --</option>` +
+        state.teachers.map(t => {
+          const busyIn = findTeacherConflict(t.id, dayIdx, periodIdx, classId);
+          const tag = busyIn ? ` ⚠️ (مشغول في ${busyIn.name})` : '';
+          return `<option value="${t.id}" ${t.id === curTId ? 'selected' : ''}>${t.subject} — ${t.name}${tag}</option>`;
+        }).join('');
+
+      checkSlotConflictPreview();
+      const modal = document.getElementById('slot-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function checkSlotConflictPreview() {
+      if (!editingSlot) return;
+      const tId = document.getElementById('slot-teacher-select').value;
+      const warn = document.getElementById('slot-conflict-warning');
+      const saveBtn = document.getElementById('slot-save-btn');
+      const conflictCls = findTeacherConflict(tId, editingSlot.dayIdx, editingSlot.periodIdx, editingSlot.classId);
+
+      if (conflictCls) {
+        warn.textContent = `⛔ تعارض! هذا المدرس لديه حصة في نفس الوقت مع شعبة (${conflictCls.name}). يرجى اختيار مدرس آخر أو تغيير وقت الحصة.`;
+        warn.classList.remove('hidden');
+        saveBtn.disabled = true;
+        saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+      } else {
+        warn.classList.add('hidden');
+        saveBtn.disabled = false;
+        saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      }
+    }
+
+    function saveActiveSlot() {
+      if (!editingSlot) return;
+      const tId = document.getElementById('slot-teacher-select').value;
+      setSlot(editingSlot.classId, editingSlot.dayIdx, editingSlot.periodIdx, tId || null);
+      saveState();
+      closeSlotModal();
+      renderTable();
+      showToast('تم حفظ الحصة بنجاح', 'success');
+    }
+
+    function clearActiveSlot() {
+      if (!editingSlot) return;
+      setSlot(editingSlot.classId, editingSlot.dayIdx, editingSlot.periodIdx, null);
+      saveState();
+      closeSlotModal();
+      renderTable();
+    }
+
+    function closeSlotModal() {
+      const modal = document.getElementById('slot-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      editingSlot = null;
+    }
+
+    function autoGenerateTimetable() {
+      if (state.classes.length === 0 || state.teachers.length === 0) {
+        showToast('أضف الشعب والمدرسين أولاً', 'error');
+        return;
+      }
+      const pCount = state.periodsCount || 6;
+      state.timetable = {};
+
+      for (let d = 0; d < DAYS.length; d++) {
+        for (let p = 0; p < pCount; p++) {
+          const usedTeachersInSlot = new Set();
+          for (const cls of state.classes) {
+            const available = state.teachers.filter(t => !usedTeachersInSlot.has(t.id));
+            if (available.length === 0) continue;
+            const shuffled = [...available].sort(() => Math.random() - 0.5);
+            const chosen = shuffled[0];
+            setSlot(cls.id, d, p, chosen.id);
+            usedTeachersInSlot.add(chosen.id);
+          }
+        }
+      }
+      saveState();
+      renderTable();
+      showToast('⚡ تم التوزيع التلقائي لجميع الشعب بدون أي تعارض!', 'success');
+    }
+
+    function clearCurrentSchedule() {
+      state.timetable = {};
+      saveState();
+      renderTable();
+      showToast('تم تصفير الجدول بالكامل');
+    }
+
+    function switchView(view) {
+      currentView = view;
+      document.getElementById('view-btn-class').className = view === 'class'
+        ? 'px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-extrabold bg-slate-900 text-white transition'
+        : 'px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition';
+      document.getElementById('view-btn-teacher').className = view === 'teacher'
+        ? 'px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-extrabold bg-slate-900 text-white transition'
+        : 'px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition';
+      renderFilterSelect();
+      renderTable();
+    }
+
+    function onFilterChange(id) {
+      activeFilterId = id;
+      renderTable();
+    }
+
+    function changePeriodsCount(n) {
+      state.periodsCount = n;
+      saveState();
+      renderTable();
+    }
+
+    function changeTheme(theme) {
+      state.theme = theme;
+      document.getElementById('a4-sheet').setAttribute('data-sched-theme', theme);
+      saveState();
+    }
+
+    function saveHeaderInfo() {
+      state.school = document.getElementById('hdr-school').innerText.trim();
+      state.year = document.getElementById('hdr-year').innerText.trim();
+      state.organizer = document.getElementById('hdr-organizer').innerText.trim();
+      state.principal = document.getElementById('hdr-principal').innerText.trim();
+      saveState();
+    }
+
+    function openSetupModal() {
+      renderSetupLists();
+      const modal = document.getElementById('setup-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeSetupModal() {
+      const modal = document.getElementById('setup-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      renderFilterSelect();
+      renderTable();
+    }
+
+    function renderSetupLists() {
+      document.getElementById('classes-list').innerHTML = state.classes.map(c => `
+        <div class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold">
+          <span>${c.name}</span>
+          <button onclick="deleteClass('${c.id}')" class="text-rose-600 hover:text-rose-800 font-extrabold px-1">حذف</button>
+        </div>`).join('');
+
+      document.getElementById('teachers-list').innerHTML = state.teachers.map(t => `
+        <div class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold">
+          <span>${t.name} <span class="text-indigo-700">(${t.subject})</span></span>
+          <button onclick="deleteTeacher('${t.id}')" class="text-rose-600 hover:text-rose-800 font-extrabold px-1">حذف</button>
+        </div>`).join('');
+    }
+
+    function addClass() {
+      const inp = document.getElementById('new-class-name');
+      const name = inp.value.trim();
+      if (!name) return;
+      state.classes.push({ id: 'c_' + Date.now(), name });
+      inp.value = '';
+      saveState();
+      renderSetupLists();
+    }
+
+    function deleteClass(id) {
+      state.classes = state.classes.filter(c => c.id !== id);
+      delete state.timetable[id];
+      saveState();
+      renderSetupLists();
+    }
+
+    function addTeacher() {
+      const nInp = document.getElementById('new-teacher-name');
+      const sInp = document.getElementById('new-teacher-subject');
+      const name = nInp.value.trim();
+      const subject = sInp.value.trim();
+      if (!name || !subject) return;
+      state.teachers.push({ id: 't_' + Date.now(), name, subject });
+      nInp.value = '';
+      sInp.value = '';
+      saveState();
+      renderSetupLists();
+    }
+
+    function deleteTeacher(id) {
+      state.teachers = state.teachers.filter(t => t.id !== id);
+      saveState();
+      renderSetupLists();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadState();
+      document.getElementById('hdr-school').innerText = state.school;
+      document.getElementById('hdr-year').innerText = state.year;
+      document.getElementById('hdr-organizer').innerText = state.organizer;
+      document.getElementById('hdr-principal').innerText = state.principal;
+      document.getElementById('periods-count-select').value = String(state.periodsCount || 6);
+      document.getElementById('theme-select').value = state.theme || 'blue';
+      document.getElementById('chk-yard-monitors').checked = !!state.showYardMonitors;
+      document.getElementById('a4-sheet').setAttribute('data-sched-theme', state.theme || 'blue');
+      renderFilterSelect();
+      renderTable();
+    });
+  </script>
+</body>
+</html>
