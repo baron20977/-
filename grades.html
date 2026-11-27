@@ -3393,4 +3393,16 @@
   }
 })();
 </script>
+ <script>
+  window.addEventListener('DOMContentLoaded', () => {
+    const navBtn = document.querySelector('a[href="plans.html"]') || document.querySelector('a[href="index.html"]');
+    if (navBtn && !document.querySelector('a[href="schedule.html"]')) {
+      const a = document.createElement('a');
+      a.href = 'schedule.html';
+      a.className = 'inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs sm:text-sm font-bold text-indigo-300 transition';
+      a.innerHTML = '<span>🗓️ الجدول</span>';
+      navBtn.insertAdjacentElement('afterend', a);
+    }
+  });
+</script> 
 </html>
