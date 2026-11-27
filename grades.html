@@ -90,6 +90,17 @@
       position: relative;
     }
 
+    /* وضع الإلصاق تحت آخر اسم بدون صفوف فارغة */
+    .a4-page.compact-sheet {
+      min-height: auto;
+    }
+    .a4-page.compact-sheet .sheet-outer-frame {
+      flex: 0 0 auto;
+    }
+    .a4-page.compact-sheet .stats-table {
+      margin-top: 8px;
+    }
+
     /* Inline editable visual affordance (screen only) */
     .inline-edit {
       outline: none;
@@ -435,6 +446,11 @@
         margin: 0 !important;
       }
 
+      .a4-page.compact-sheet {
+        min-height: auto !important;
+        height: auto !important;
+      }
+
       .a4-page {
         width: 100% !important;
         min-height: 280mm !important;
@@ -532,9 +548,15 @@
           </svg>
           <span>منشئ الأسئلة</span>
         </a>
-<a href="plans.html" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs sm:text-sm font-bold text-sky-300 transition">
+
+        <a href="plans.html" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs sm:text-sm font-bold text-sky-300 transition">
           <span>📘 الخطة</span>
         </a>
+
+        <a href="schedule.html" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs sm:text-sm font-bold text-indigo-300 transition">
+          <span>🗓️ الجدول</span>
+        </a>
+
         <button onclick="exportSectionCSV()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-teal-700 hover:bg-teal-600 text-xs sm:text-sm font-bold text-white transition" title="تصدير الشعبة الحالية إلى ملف إكسل (CSV)">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -872,6 +894,10 @@
                   <option value="32">32 طالب في الصفحة</option>
                   <option value="35">35 طالب في الصفحة (مكثف)</option>
                 </select>
+                <label class="mt-2 inline-flex items-center gap-2 text-xs font-extrabold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1.5 cursor-pointer select-none">
+                  <input id="chk-compact-empty-rows" type="checkbox" onchange="updateGlobalSetting('compactEmptyRows', this.checked)" class="w-4 h-4 accent-emerald-600 rounded" />
+                  <span>إخفاء الصفوف الفارغة (وضع الإحصائية تحت آخر اسم مباشرة)</span>
+                </label>
               </div>
             </div>
 
@@ -1151,7 +1177,8 @@
           themeColor: 'green',
           useArabicDigits: true,
           printColorMode: 'color', // 'color' | 'bw'
-          rowsPerPage: 28
+          rowsPerPage: 28,
+          compactEmptyRows: true
         },
         activeSectionId: secId,
         sections: [
@@ -1544,6 +1571,7 @@
     function buildSectionPagesHTML(section, isInteractive = true) {
       const gs = appState.globalSettings;
       const rowsPerPage = gs.rowsPerPage || 28;
+      const compactMode = gs.compactEmptyRows !== false;
       const rowH = getDynamicRowHeightPx(rowsPerPage);
       const students = section.students || [];
       const totalPages = Math.max(1, Math.ceil(students.length / rowsPerPage));
@@ -1651,6 +1679,11 @@
                 <td>${tafqeetCellHtml}</td>
               </tr>`;
           } else {
+            if (compactMode) {
+              // في وضع الإلصاق تحت آخر اسم: لا نرسم صفوفاً فارغة بعد آخر طالب
+              // نُبقي صفاً واحداً فقط إذا كان الجدول فارغاً بالكامل (0 طلاب)
+              if (students.length > 0 || r > 0) break;
+            }
             let emptySubCells = '';
             for (let c = 0; c < cols.length; c++) emptySubCells += `<td></td>`;
             rowsHtml += `
@@ -1729,7 +1762,7 @@
         `;
 
         pagesHtml += `
-          <div class="a4-page" data-sheet-theme="${gs.themeColor}" style="--row-h:${rowH}px;">
+          <div class="a4-page ${compactMode ? 'compact-sheet' : ''}" data-sheet-theme="${gs.themeColor}" style="--row-h:${rowH}px;">
             <div class="sheet-outer-frame">
               <!-- Official Header -->
               <div class="sheet-header ${gs.showLogo ? '' : 'no-logo'}">
@@ -1774,7 +1807,7 @@
               </div>
 
               <!-- Main Grades Table -->
-              <div style="flex:1;">
+              <div style="${compactMode ? '' : 'flex:1;'}">
                 <table class="grades-table">
                   <colgroup>${colGroupHtml}</colgroup>
                   <thead>
@@ -1875,6 +1908,8 @@
       document.getElementById('chk-show-logo').checked = !!gs.showLogo;
       document.getElementById('inp-theme-color').value = gs.themeColor || 'green';
       document.getElementById('inp-rows-per-page').value = String(gs.rowsPerPage || 28);
+      const chkCompact = document.getElementById('chk-compact-empty-rows');
+      if (chkCompact) chkCompact.checked = gs.compactEmptyRows !== false;
       document.getElementById('chk-arabic-digits').checked = !!gs.useArabicDigits;
       document.getElementById('chk-print-bw').checked = gs.printColorMode === 'bw';
 
@@ -2780,8 +2815,9 @@
   </script>
 
 
+
 <!-- ============================================================
-     تحديث V2 (النسخة النهائية): قالب الابتدائية المرن + المتابعة اليومية
+     تحديث V2 الكامل: قالب الابتدائية المرن (10 أعمدة) + المتابعة اليومية والشفوي
      ============================================================ -->
 <style>
   .grades-table.primary-10-cols { font-size: 10px !important; }
@@ -2794,7 +2830,6 @@
 <!-- شريط إعدادات قالب الابتدائية (يظهر تلقائياً عند اختيار قالب الابتدائية) -->
 <div id="primary-calc-bar" class="no-print hidden max-w-7xl w-full mx-auto px-3 sm:px-5 pt-2">
   <div class="bg-emerald-50 border border-emerald-200 rounded-2xl px-4 py-2.5 space-y-2.5 text-xs font-bold text-emerald-950 shadow-xs">
-    <!-- الصف الأول: المعدل الأول والثاني والسعي -->
     <div class="flex flex-wrap items-center justify-between gap-2.5">
       <span class="font-extrabold text-emerald-800">⚙️ إعدادات المرحلة الابتدائية:</span>
       <div class="flex flex-wrap items-center gap-2.5">
@@ -2823,7 +2858,6 @@
       </div>
     </div>
 
-    <!-- الصف الثاني: النتيجة النهائية (الدرجة رقماً وكتابةً) -->
     <div class="border-t border-emerald-200/80 pt-2 flex flex-wrap items-center gap-2">
       <label class="inline-flex items-center gap-1.5">
         <span class="font-extrabold text-emerald-900">النتيجة النهائية:</span>
@@ -2904,9 +2938,6 @@
 
 <script>
 (function() {
-  /* ------------------------------------------------------------
-     1. قالب المرحلة الابتدائية الكامل (10 أعمدة + نتيجة نهائية مخصصة)
-     ------------------------------------------------------------ */
   COLUMN_PRESETS.primary_annual = {
     subject: '',
     cols: ['ش1', 'ش2', 'ش3', 'المعدل ١', 'نصف السنة', 'آذار', 'نيسان', 'المعدل ٢', 'السعي', 'النهائي']
@@ -2965,7 +2996,6 @@
     if (!student.scores) student.scores = {};
     const sc = student.scores;
 
-    // 1) المعدل الأول
     const v1 = parseScoreNum(sc, pCols.m1);
     const v2 = parseScoreNum(sc, pCols.m2);
     const v3 = parseScoreNum(sc, pCols.m3);
@@ -2975,7 +3005,6 @@
       sc[pCols.avg1.id] = '';
     }
 
-    // 2) المعدل الثاني
     const vMar = parseScoreNum(sc, pCols.mar);
     const vApr = parseScoreNum(sc, pCols.apr);
     if (vMar !== null || vApr !== null) {
@@ -2984,7 +3013,6 @@
       sc[pCols.avg2.id] = '';
     }
 
-    // 3) السعي السنوي
     if (cfg.saiMode !== 'manual') {
       const a1 = parseScoreNum(sc, pCols.avg1);
       const mid = parseScoreNum(sc, pCols.mid);
@@ -3049,7 +3077,6 @@
     const customWrap = document.getElementById('prim-final-custom-wrap');
     customWrap.classList.toggle('hidden', cfg.finalMode === 'manual');
 
-    // رسم مربعات اختيار الأعمدة للنتيجة النهائية
     const colsList = document.getElementById('prim-final-cols-list');
     colsList.innerHTML = (sec.columns || []).map(c => {
       const checked = cfg.finalCols.includes(c.id);
@@ -3096,7 +3123,6 @@
     syncPrimaryBarUI();
   };
 
-  // حساب النتيجة النهائية (الدرجة رقماً وكتابةً) حسب اختيار الأستاذ
   const _origComputeStudentResult = window.computeStudentResult;
   window.computeStudentResult = function(student, section) {
     const pCols = getPrimaryCols(section);
@@ -3139,7 +3165,6 @@
       }
     }
 
-    // إذا كان الوضع يدوياً أو لم تُدخل درجات في الأعمدة المختارة
     if (!isAutoFinal) {
       const manual = (student.manualTotal || '').trim();
       if (manual) {
@@ -3214,9 +3239,6 @@
     syncPrimaryBarUI();
   });
 
-  /* ------------------------------------------------------------
-     2. سجل المتابعة اليومي والشفوي (يدعم الأرقام العربية والحساب الفوري)
-     ------------------------------------------------------------ */
   const FU_WEIGHTS = { present: 1, notebook: 1, prepared: 2, absent: -1, excused: 0, behavior: -2 };
 
   function parseArabicNumber(val, fallback) {
@@ -3393,16 +3415,4 @@
   }
 })();
 </script>
- <script>
-  window.addEventListener('DOMContentLoaded', () => {
-    const navBtn = document.querySelector('a[href="plans.html"]') || document.querySelector('a[href="index.html"]');
-    if (navBtn && !document.querySelector('a[href="schedule.html"]')) {
-      const a = document.createElement('a');
-      a.href = 'schedule.html';
-      a.className = 'inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs sm:text-sm font-bold text-indigo-300 transition';
-      a.innerHTML = '<span>🗓️ الجدول</span>';
-      navBtn.insertAdjacentElement('afterend', a);
-    }
-  });
-</script> 
 </html>
