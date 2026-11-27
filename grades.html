@@ -2778,4 +2778,352 @@
   </script>
 
 
+<!-- ============================================================
+     تحديث V2: قالب الابتدائية (سعي ونهائي) + سجل المتابعة اليومي والشفوي
+     ============================================================ -->
+<div id="followup-modal" class="no-print fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-50 hidden items-center justify-center p-2 sm:p-4">
+  <div class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full overflow-hidden flex flex-col max-h-[92vh]">
+    <!-- Header -->
+    <div class="px-4 sm:px-5 py-3.5 bg-slate-900 text-white flex flex-wrap items-center justify-between gap-2">
+      <div>
+        <h2 class="text-sm sm:text-base font-extrabold">📋 سجل المتابعة اليومي وحساب درجة الشفوي</h2>
+        <p id="fu-section-subtitle" class="text-[11px] text-emerald-300 font-bold"></p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="resetFollowupSection()" class="px-3 py-1.5 rounded-xl bg-rose-600/90 hover:bg-rose-600 text-xs font-bold text-white transition">تصفير المتابعة</button>
+        <button onclick="closeFollowupModal()" class="text-slate-300 hover:text-white text-2xl font-bold px-2 leading-none">&times;</button>
+      </div>
+    </div>
+
+    <!-- Formula & Target Column Settings -->
+    <div class="bg-slate-50 border-b border-slate-200 px-4 py-3 flex flex-wrap items-center justify-between gap-3 text-xs font-bold text-slate-700">
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="text-slate-900 font-extrabold">إعدادات المعادلة:</span>
+        <label class="inline-flex items-center gap-1 bg-white border border-slate-300 rounded-lg px-2 py-1">
+          <span>درجة الأساس:</span>
+          <input id="fu-base-score" type="number" value="10" min="0" max="100" onchange="updateFollowupConfig()" class="w-12 text-center font-extrabold text-emerald-700 focus:outline-none" />
+        </label>
+        <label class="inline-flex items-center gap-1 bg-white border border-slate-300 rounded-lg px-2 py-1">
+          <span>الحد الأقصى:</span>
+          <input id="fu-max-score" type="number" value="20" min="5" max="100" onchange="updateFollowupConfig()" class="w-12 text-center font-extrabold text-blue-700 focus:outline-none" />
+        </label>
+        <span class="text-[11px] text-slate-500">(حاضر +1 | دفتر +1 | محضّر +2 | غائب -1 | مجاز 0 | سلوك -2)</span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <label class="text-slate-900 font-extrabold">الترحيل إلى عمود:</label>
+        <select id="fu-target-col" class="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-extrabold text-slate-800"></select>
+      </div>
+    </div>
+
+    <!-- Students Followup Table -->
+    <div class="p-3 sm:p-4 overflow-y-auto flex-1">
+      <div class="overflow-x-auto">
+        <table class="w-full border-collapse text-xs text-center">
+          <thead>
+            <tr class="bg-slate-100 text-slate-800 border-b-2 border-slate-300">
+              <th class="p-2 border border-slate-200 w-10">ت</th>
+              <th class="p-2 border border-slate-200 text-right min-w-[150px]">اسم الطالب</th>
+              <th class="p-2 border border-slate-200">حاضر (+1)</th>
+              <th class="p-2 border border-slate-200">دفتر (+1)</th>
+              <th class="p-2 border border-slate-200">محضّر (+2)</th>
+              <th class="p-2 border border-slate-200">غائب (-1)</th>
+              <th class="p-2 border border-slate-200">مجاز (0)</th>
+              <th class="p-2 border border-slate-200">سلوك (-2)</th>
+              <th class="p-2 border border-slate-200 bg-emerald-50 text-emerald-900 w-24">درجة الشفوي</th>
+              <th class="p-2 border border-slate-200 w-28">ترحيل للسجل</th>
+            </tr>
+          </thead>
+          <tbody id="fu-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  /* ------------------------------------------------------------
+     1. إضافة قالب المرحلة الابتدائية (سعي ونهائي) وتعديل الحساب التلقائي
+     ------------------------------------------------------------ */
+  COLUMN_PRESETS.primary_annual = {
+    subject: '',
+    cols: ['المعدل الأول', 'نصف السنة', 'المعدل الثاني', 'السعي السنوي', 'الامتحان النهائي']
+  };
+
+  window.addEventListener('DOMContentLoaded', () => {
+    // إضافة خيار قالب الابتدائية لقائمة القوالب
+    const presetSelect = document.getElementById('inp-column-preset');
+    if (presetSelect && !presetSelect.querySelector('option[value="primary_annual"]')) {
+      const opt = document.createElement('option');
+      opt.value = 'primary_annual';
+      opt.textContent = 'المرحلة الابتدائية (سعي ونهائي): المعدل الأول، نصف السنة، المعدل الثاني، السعي، النهائي';
+      presetSelect.insertBefore(opt, presetSelect.firstChild);
+    }
+
+    // إضافة زر "المتابعة اليومية والشفوي" لشريط أزرار الطلاب
+    const studentsTab = document.querySelector('#ctrl-tab-students .flex');
+    if (studentsTab && !document.getElementById('btn-open-followup')) {
+      const btn = document.createElement('button');
+      btn.id = 'btn-open-followup';
+      btn.onclick = openFollowupModal;
+      btn.className = 'inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs sm:text-sm font-extrabold shadow-sm transition';
+      btn.innerHTML = '<span>📋 المتابعة اليومية والشفوي</span>';
+      studentsTab.appendChild(btn);
+    }
+  });
+
+  // تغليف دالة حساب النتيجة لدعم معادلة الابتدائية (السعي والنهائي) بدون التأثير على باقي القوالب
+  const _origComputeStudentResult = window.computeStudentResult;
+  window.computeStudentResult = function(student, section) {
+    const cols = section.columns || [];
+    const colM1 = cols.find(c => c.name.includes('المعدل الأول'));
+    const colMid = cols.find(c => c.name.includes('نصف السنة'));
+    const colM2 = cols.find(c => c.name.includes('المعدل الثاني'));
+    const colSai = cols.find(c => c.name.includes('السعي'));
+    const colFinal = cols.find(c => c.name.includes('النهائي'));
+
+    if (!(colM1 && colMid && colM2 && colSai && colFinal)) {
+      return _origComputeStudentResult(student, section);
+    }
+
+    const sc = student.scores || {};
+    const parseNum = (id) => {
+      const v = String(sc[id] || '').trim();
+      if (!v) return null;
+      const n = parseFloat(toWesternDigits(v));
+      return isNaN(n) ? null : n;
+    };
+
+    const v1 = parseNum(colM1.id);
+    const vMid = parseNum(colMid.id);
+    const v2 = parseNum(colM2.id);
+    let vSai = parseNum(colSai.id);
+    const rawFinal = String(sc[colFinal.id] || '').trim();
+    const vFinal = parseNum(colFinal.id);
+
+    // حساب السعي تلقائياً إذا كانت خانة السعي فارغة وتوفرت الدرجات الثلاث
+    if (vSai === null && (v1 !== null || vMid !== null || v2 !== null)) {
+      const parts = [v1, vMid, v2].filter(x => x !== null);
+      vSai = Math.round(parts.reduce((a, b) => a + b, 0) / parts.length);
+    }
+
+    let statusType = 'empty';
+    let rawNumeric = null;
+    let rawDisplay = '';
+    const hasSubValue = (v1 !== null || vMid !== null || v2 !== null || vSai !== null || rawFinal !== '');
+
+    if (/^(غ|غائب|غائبة)$/.test(rawFinal)) { rawDisplay = 'غ'; statusType = 'absent'; }
+    else if (/^(م|مؤجل|مؤجلة)$/.test(rawFinal)) { rawDisplay = 'م'; statusType = 'postponed'; }
+    else if (/^(ع|معفى|معفي)$/.test(rawFinal)) { rawDisplay = 'معفى'; statusType = 'exempt'; }
+    else if (vFinal !== null && vSai !== null) {
+      rawNumeric = Math.round((vSai + vFinal) / 2);
+      rawDisplay = String(rawNumeric);
+      statusType = 'numeric';
+    } else if (vFinal !== null) {
+      rawNumeric = vFinal;
+      rawDisplay = String(rawNumeric);
+      statusType = 'numeric';
+    } else if (vSai !== null) {
+      rawNumeric = vSai;
+      rawDisplay = String(rawNumeric);
+      statusType = 'numeric';
+    } else {
+      return _origComputeStudentResult(student, section);
+    }
+
+    const passMark = typeof section.passingScore === 'number' ? section.passingScore : 50;
+    const decPts = typeof section.decisionPoints === 'number' ? section.decisionPoints : 5;
+    let effectiveNumeric = rawNumeric;
+    let isDecisionApplied = false;
+
+    if (statusType === 'numeric' && section.decisionEnabled && rawNumeric < passMark && rawNumeric >= (passMark - decPts)) {
+      effectiveNumeric = passMark;
+      isDecisionApplied = true;
+    }
+
+    const displayFormatted = statusType === 'numeric' ? formatDigits(String(effectiveNumeric)) : rawDisplay;
+    let autoTafqeet = statusType === 'numeric'
+      ? numberToArabicTafqeet(effectiveNumeric) + (isDecisionApplied ? ' (قرار)' : '')
+      : numberToArabicTafqeet(rawDisplay);
+
+    const isManualTafqeet = student.manualTafqeet !== null && student.manualTafqeet !== undefined;
+    return {
+      hasSubValue,
+      rawNumeric,
+      effectiveNumeric,
+      isDecisionApplied,
+      displayFormatted,
+      tafqeet: isManualTafqeet ? student.manualTafqeet : autoTafqeet,
+      isManualTafqeet,
+      statusType,
+      isFail: statusType === 'numeric' && effectiveNumeric < passMark,
+      isPass: statusType === 'numeric' && effectiveNumeric >= passMark
+    };
+  };
+
+  /* ------------------------------------------------------------
+     2. سجل المتابعة اليومي والشفوي + الترحيل الفردي لكل طالب
+     ------------------------------------------------------------ */
+  const FU_WEIGHTS = { present: 1, notebook: 1, prepared: 2, absent: -1, excused: 0, behavior: -2 };
+
+  function ensureFollowupData(sec) {
+    if (!sec.followupConfig) sec.followupConfig = { base: 10, max: 20 };
+    sec.students.forEach(st => {
+      if (!st.followup) {
+        st.followup = { present: 0, notebook: 0, prepared: 0, absent: 0, excused: 0, behavior: 0, manualOral: null };
+      }
+    });
+  }
+
+  function calcOralScore(st, cfg) {
+    const f = st.followup;
+    if (f.manualOral !== null && f.manualOral !== undefined && f.manualOral !== '') {
+      return Number(f.manualOral);
+    }
+    const pts = (f.present * FU_WEIGHTS.present) + (f.notebook * FU_WEIGHTS.notebook) +
+                (f.prepared * FU_WEIGHTS.prepared) + (f.absent * FU_WEIGHTS.absent) +
+                (f.excused * FU_WEIGHTS.excused) + (f.behavior * FU_WEIGHTS.behavior);
+    const total = cfg.base + pts;
+    return Math.max(0, Math.min(cfg.max, total));
+  }
+
+  window.openFollowupModal = function() {
+    const sec = getActiveSection();
+    ensureFollowupData(sec);
+    document.getElementById('fu-section-subtitle').textContent = `${sec.grade} (${sec.sectionName || 'بدون'}) — ${sec.subject}`;
+    document.getElementById('fu-base-score').value = sec.followupConfig.base;
+    document.getElementById('fu-max-score').value = sec.followupConfig.max;
+
+    // تعبئة قائمة الأعمدة المتاحة للترحيل
+    const targetSel = document.getElementById('fu-target-col');
+    let opts = `<option value="__total__">الدرجة المباشرة (رقماً)</option>`;
+    (sec.columns || []).forEach(c => {
+      opts += `<option value="${c.id}">عمود: ${escapeHtml(c.name)}</option>`;
+    });
+    targetSel.innerHTML = opts;
+    // اختيار عمود "الشفوي" أو "اليومي" تلقائياً إن وجد
+    const oralCol = (sec.columns || []).find(c => /شفوي|يومي/.test(c.name));
+    if (oralCol) targetSel.value = oralCol.id;
+
+    renderFollowupTable();
+    const modal = document.getElementById('followup-modal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  };
+
+  window.closeFollowupModal = function() {
+    const modal = document.getElementById('followup-modal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  };
+
+  window.updateFollowupConfig = function() {
+    const sec = getActiveSection();
+    ensureFollowupData(sec);
+    sec.followupConfig.base = Math.max(0, Number(document.getElementById('fu-base-score').value) || 0);
+    sec.followupConfig.max = Math.max(1, Number(document.getElementById('fu-max-score').value) || 20);
+    saveState();
+    renderFollowupTable();
+  };
+
+  window.adjustFollowup = function(stId, field, delta) {
+    const sec = getActiveSection();
+    const st = sec.students.find(s => s.id === stId);
+    if (!st) return;
+    ensureFollowupData(sec);
+    st.followup[field] = Math.max(0, (st.followup[field] || 0) + delta);
+    st.followup.manualOral = null; // إعادة الحساب التلقائي عند التعديل
+    saveState();
+    renderFollowupTable();
+  };
+
+  window.setManualOral = function(stId, val) {
+    const sec = getActiveSection();
+    const st = sec.students.find(s => s.id === stId);
+    if (!st) return;
+    st.followup.manualOral = val.trim() === '' ? null : Number(toWesternDigits(val));
+    saveState();
+  };
+
+  window.transferSingleStudentOral = function(stId) {
+    const sec = getActiveSection();
+    const st = sec.students.find(s => s.id === stId);
+    if (!st) return;
+    ensureFollowupData(sec);
+
+    const score = calcOralScore(st, sec.followupConfig);
+    const targetCol = document.getElementById('fu-target-col').value;
+
+    if (targetCol === '__total__') {
+      st.manualTotal = String(score);
+    } else {
+      if (!st.scores) st.scores = {};
+      st.scores[targetCol] = String(score);
+    }
+    st.manualTafqeet = null;
+    saveState();
+    renderActiveSheet();
+    showToast(`تم ترحيل درجة (${formatDigits(score)}) للطالب ${st.name} بنجاح`, 'success');
+  };
+
+  window.resetFollowupSection = function() {
+    openConfirmModal('تصفير المتابعة اليومية', 'هل تريد تصفير جميع نقاط المتابعة اليومية للشعبة الحالية؟', () => {
+      const sec = getActiveSection();
+      sec.students.forEach(st => {
+        st.followup = { present: 0, notebook: 0, prepared: 0, absent: 0, excused: 0, behavior: 0, manualOral: null };
+      });
+      saveState();
+      renderFollowupTable();
+      showToast('تم تصفير سجل المتابعة اليومية', 'info');
+    });
+  };
+
+  function renderFollowupTable() {
+    const sec = getActiveSection();
+    ensureFollowupData(sec);
+    const tbody = document.getElementById('fu-table-body');
+    const validStudents = sec.students.filter(s => (s.name || '').trim() !== '');
+
+    if (validStudents.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="10" class="p-6 text-slate-500 font-bold">لا يوجد طلاب في هذه الشعبة حالياً.</td></tr>`;
+      return;
+    }
+
+    const counterCell = (stId, field, val, colorCls) => `
+      <td class="p-1.5 border border-slate-200">
+        <div class="inline-flex items-center gap-1">
+          <button onclick="adjustFollowup('${stId}','${field}',-1)" class="w-6 h-6 rounded bg-slate-200 hover:bg-slate-300 font-extrabold text-slate-700">-</button>
+          <span class="w-6 font-extrabold ${colorCls}">${formatDigits(val)}</span>
+          <button onclick="adjustFollowup('${stId}','${field}',1)" class="w-6 h-6 rounded bg-slate-800 hover:bg-slate-700 font-extrabold text-white">+</button>
+        </div>
+      </td>`;
+
+    tbody.innerHTML = validStudents.map((st, idx) => {
+      const f = st.followup;
+      const oral = calcOralScore(st, sec.followupConfig);
+      return `
+        <tr class="hover:bg-slate-50">
+          <td class="p-1.5 border border-slate-200 font-bold">${formatDigits(idx + 1)}</td>
+          <td class="p-1.5 border border-slate-200 text-right font-extrabold text-slate-900">${escapeHtml(st.name)}</td>
+          ${counterCell(st.id, 'present', f.present, 'text-emerald-700')}
+          ${counterCell(st.id, 'notebook', f.notebook, 'text-blue-700')}
+          ${counterCell(st.id, 'prepared', f.prepared, 'text-indigo-700')}
+          ${counterCell(st.id, 'absent', f.absent, 'text-rose-600')}
+          ${counterCell(st.id, 'excused', f.excused, 'text-amber-600')}
+          ${counterCell(st.id, 'behavior', f.behavior, 'text-rose-700')}
+          <td class="p-1.5 border border-slate-200 bg-emerald-50">
+            <input type="number" value="${oral}" onchange="setManualOral('${st.id}', this.value)"
+              class="w-16 text-center rounded-lg border border-emerald-300 bg-white py-1 font-extrabold text-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+          </td>
+          <td class="p-1.5 border border-slate-200">
+            <button onclick="transferSingleStudentOral('${st.id}')" class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shadow-xs transition">
+              ترحيل ↗️
+            </button>
+          </td>
+        </tr>`;
+    }).join('');
+  }
+})();
+</script>
 </html>
