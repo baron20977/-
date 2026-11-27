@@ -2779,11 +2779,72 @@
 
 
 <!-- ============================================================
-     تحديث V2 (مُصحح): قالب الابتدائية + سجل المتابعة اليومي والشفوي
+     تحديث V2 (النسخة النهائية): قالب الابتدائية المرن + المتابعة اليومية
      ============================================================ -->
+<style>
+  .grades-table.primary-10-cols { font-size: 10px !important; }
+  .grades-table.primary-10-cols thead th { font-size: 9.5px !important; padding: 2px 1px !important; }
+  .grades-table.primary-10-cols .cell-input { font-size: 10px !important; padding: 0 1px !important; }
+  .grades-table.primary-10-cols .cell-input-name { font-size: 10.5px !important; }
+  .grades-table.primary-10-cols .cell-input-tafqeet { font-size: 9.5px !important; }
+</style>
+
+<!-- شريط إعدادات قالب الابتدائية (يظهر تلقائياً عند اختيار قالب الابتدائية) -->
+<div id="primary-calc-bar" class="no-print hidden max-w-7xl w-full mx-auto px-3 sm:px-5 pt-2">
+  <div class="bg-emerald-50 border border-emerald-200 rounded-2xl px-4 py-2.5 space-y-2.5 text-xs font-bold text-emerald-950 shadow-xs">
+    <!-- الصف الأول: المعدل الأول والثاني والسعي -->
+    <div class="flex flex-wrap items-center justify-between gap-2.5">
+      <span class="font-extrabold text-emerald-800">⚙️ إعدادات المرحلة الابتدائية:</span>
+      <div class="flex flex-wrap items-center gap-2.5">
+        <label class="inline-flex items-center gap-1">
+          <span>المعدل ١:</span>
+          <select id="prim-div1" onchange="updatePrimaryCalcConfig()" class="rounded-lg border border-emerald-300 bg-white px-2 py-1 text-xs font-extrabold">
+            <option value="3">÷ 3</option>
+            <option value="2">÷ 2</option>
+          </select>
+        </label>
+        <label class="inline-flex items-center gap-1">
+          <span>المعدل ٢:</span>
+          <select id="prim-div2" onchange="updatePrimaryCalcConfig()" class="rounded-lg border border-emerald-300 bg-white px-2 py-1 text-xs font-extrabold">
+            <option value="2">÷ 2</option>
+            <option value="3">÷ 3</option>
+          </select>
+        </label>
+        <label class="inline-flex items-center gap-1">
+          <span>السعي:</span>
+          <select id="prim-sai-mode" onchange="updatePrimaryCalcConfig()" class="rounded-lg border border-emerald-300 bg-white px-2 py-1 text-xs font-extrabold">
+            <option value="manual">يدوي (اختياري)</option>
+            <option value="all3">(المعدل ١ + نصف السنة + المعدل ٢) ÷ 3</option>
+            <option value="avg2">(المعدل ١ + المعدل ٢) ÷ 2</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <!-- الصف الثاني: النتيجة النهائية (الدرجة رقماً وكتابةً) -->
+    <div class="border-t border-emerald-200/80 pt-2 flex flex-wrap items-center gap-2">
+      <label class="inline-flex items-center gap-1.5">
+        <span class="font-extrabold text-emerald-900">النتيجة النهائية:</span>
+        <select id="prim-final-mode" onchange="updatePrimaryCalcConfig()" class="rounded-lg border border-emerald-300 bg-white px-2 py-1 text-xs font-extrabold">
+          <option value="custom">تلقائي (اختر الأعمدة)</option>
+          <option value="manual">يدوي (كتابة مباشرة)</option>
+        </select>
+      </label>
+
+      <div id="prim-final-custom-wrap" class="flex flex-wrap items-center gap-1.5">
+        <div id="prim-final-cols-list" class="flex flex-wrap items-center gap-1"></div>
+        <label class="inline-flex items-center gap-1 bg-white border border-emerald-300 rounded-lg px-2 py-0.5 mr-1">
+          <span>÷ القسمة على:</span>
+          <input id="prim-final-div" type="text" inputmode="decimal" value="2" oninput="updatePrimaryCalcConfig()" class="w-10 text-center font-extrabold text-emerald-800 focus:outline-none" />
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- نافذة سجل المتابعة اليومي والشفوي -->
 <div id="followup-modal" class="no-print fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-50 hidden items-center justify-center p-2 sm:p-4">
   <div class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full overflow-hidden flex flex-col max-h-[92vh]">
-    <!-- Header -->
     <div class="px-4 sm:px-5 py-3.5 bg-slate-900 text-white flex flex-wrap items-center justify-between gap-2">
       <div>
         <h2 class="text-sm sm:text-base font-extrabold">📋 سجل المتابعة اليومي وحساب درجة الشفوي</h2>
@@ -2795,7 +2856,6 @@
       </div>
     </div>
 
-    <!-- Formula & Target Column Settings -->
     <div class="bg-slate-50 border-b border-slate-200 px-4 py-3 flex flex-wrap items-center justify-between gap-3 text-xs font-bold text-slate-700">
       <div class="flex flex-wrap items-center gap-2">
         <span class="text-slate-900 font-extrabold">إعدادات المعادلة:</span>
@@ -2816,7 +2876,6 @@
       </div>
     </div>
 
-    <!-- Students Followup Table -->
     <div class="p-3 sm:p-4 overflow-y-auto flex-1">
       <div class="overflow-x-auto">
         <table class="w-full border-collapse text-xs text-center">
@@ -2844,95 +2903,253 @@
 <script>
 (function() {
   /* ------------------------------------------------------------
-     1. قالب المرحلة الابتدائية + تطبيق القالب فور الاختيار
+     1. قالب المرحلة الابتدائية الكامل (10 أعمدة + نتيجة نهائية مخصصة)
      ------------------------------------------------------------ */
   COLUMN_PRESETS.primary_annual = {
     subject: '',
-    cols: ['المعدل الأول', 'نصف السنة', 'المعدل الثاني', 'السعي السنوي', 'الامتحان النهائي']
+    cols: ['ش1', 'ش2', 'ش3', 'المعدل ١', 'نصف السنة', 'آذار', 'نيسان', 'المعدل ٢', 'السعي', 'النهائي']
   };
 
-  window.addEventListener('DOMContentLoaded', () => {
-    const presetSelect = document.getElementById('inp-column-preset');
-    if (presetSelect) {
-      if (!presetSelect.querySelector('option[value="primary_annual"]')) {
-        const opt = document.createElement('option');
-        opt.value = 'primary_annual';
-        opt.textContent = 'المرحلة الابتدائية (سعي ونهائي): المعدل الأول، نصف السنة، المعدل الثاني، السعي، النهائي';
-        presetSelect.insertBefore(opt, presetSelect.firstChild);
+  function getPrimaryCols(section) {
+    const cols = section.columns || [];
+    const find = (re) => cols.find(c => re.test(c.name));
+    const c = {
+      m1: find(/^ش1$|الشهر الأول/),
+      m2: find(/^ش2$|الشهر الثاني/),
+      m3: find(/^ش3$|الشهر الثالث/),
+      avg1: find(/المعدل ١|المعدل الأول/),
+      mid: find(/نصف السنة/),
+      mar: find(/آذار|اذار/),
+      apr: find(/نيسان/),
+      avg2: find(/المعدل ٢|المعدل الثاني/),
+      sai: find(/السعي/),
+      fin: find(/النهائي/)
+    };
+    return (c.avg1 && c.mid && c.avg2 && c.sai && c.fin) ? c : null;
+  }
+
+  function ensurePrimaryConfig(sec) {
+    const pCols = getPrimaryCols(sec);
+    if (!sec.primaryConfig) {
+      sec.primaryConfig = {
+        div1: 3,
+        div2: 2,
+        saiMode: 'manual',
+        finalMode: 'custom',
+        finalCols: pCols ? [pCols.sai.id, pCols.fin.id] : [],
+        finalDiv: 2
+      };
+    }
+    if (!sec.primaryConfig.finalMode) sec.primaryConfig.finalMode = 'custom';
+    if (!Array.isArray(sec.primaryConfig.finalCols)) {
+      sec.primaryConfig.finalCols = pCols ? [pCols.sai.id, pCols.fin.id] : [];
+    }
+    if (!sec.primaryConfig.finalDiv) sec.primaryConfig.finalDiv = 2;
+    return sec.primaryConfig;
+  }
+
+  function parseScoreNum(sc, col) {
+    if (!col || !sc) return null;
+    const v = String(sc[col.id] || '').trim();
+    if (!v) return null;
+    const n = parseFloat(toWesternDigits(v));
+    return isNaN(n) ? null : n;
+  }
+
+  function recalcPrimaryRow(student, section) {
+    const pCols = getPrimaryCols(section);
+    if (!pCols) return false;
+    const cfg = ensurePrimaryConfig(section);
+    if (!student.scores) student.scores = {};
+    const sc = student.scores;
+
+    // 1) المعدل الأول
+    const v1 = parseScoreNum(sc, pCols.m1);
+    const v2 = parseScoreNum(sc, pCols.m2);
+    const v3 = parseScoreNum(sc, pCols.m3);
+    if (v1 !== null || v2 !== null || v3 !== null) {
+      sc[pCols.avg1.id] = String(Math.round(((v1 || 0) + (v2 || 0) + (v3 || 0)) / (cfg.div1 || 3)));
+    } else {
+      sc[pCols.avg1.id] = '';
+    }
+
+    // 2) المعدل الثاني
+    const vMar = parseScoreNum(sc, pCols.mar);
+    const vApr = parseScoreNum(sc, pCols.apr);
+    if (vMar !== null || vApr !== null) {
+      sc[pCols.avg2.id] = String(Math.round(((vMar || 0) + (vApr || 0)) / (cfg.div2 || 2)));
+    } else {
+      sc[pCols.avg2.id] = '';
+    }
+
+    // 3) السعي السنوي
+    if (cfg.saiMode !== 'manual') {
+      const a1 = parseScoreNum(sc, pCols.avg1);
+      const mid = parseScoreNum(sc, pCols.mid);
+      const a2 = parseScoreNum(sc, pCols.avg2);
+      if (cfg.saiMode === 'all3' && (a1 !== null || mid !== null || a2 !== null)) {
+        sc[pCols.sai.id] = String(Math.round(((a1 || 0) + (mid || 0) + (a2 || 0)) / 3));
+      } else if (cfg.saiMode === 'avg2' && (a1 !== null || a2 !== null)) {
+        sc[pCols.sai.id] = String(Math.round(((a1 || 0) + (a2 || 0)) / 2));
+      } else {
+        sc[pCols.sai.id] = '';
       }
-      // تطبيق القالب تلقائياً بمجرد اختياره من القائمة
-      presetSelect.addEventListener('change', () => {
-        applySelectedColumnPreset();
+    }
+    return true;
+  }
+
+  window.togglePrimaryFinalCol = function(colId, checked) {
+    const sec = getActiveSection();
+    const cfg = ensurePrimaryConfig(sec);
+    if (checked) {
+      if (!cfg.finalCols.includes(colId)) cfg.finalCols.push(colId);
+    } else {
+      cfg.finalCols = cfg.finalCols.filter(id => id !== colId);
+    }
+    saveState();
+    renderActiveSheet();
+  };
+
+  window.updatePrimaryCalcConfig = function() {
+    const sec = getActiveSection();
+    const cfg = ensurePrimaryConfig(sec);
+    cfg.div1 = Number(document.getElementById('prim-div1').value) || 3;
+    cfg.div2 = Number(document.getElementById('prim-div2').value) || 2;
+    cfg.saiMode = document.getElementById('prim-sai-mode').value || 'manual';
+    cfg.finalMode = document.getElementById('prim-final-mode').value || 'custom';
+    const rawDiv = parseFloat(toWesternDigits(document.getElementById('prim-final-div').value || '2'));
+    cfg.finalDiv = (!isNaN(rawDiv) && rawDiv > 0) ? rawDiv : 1;
+
+    sec.students.forEach(st => recalcPrimaryRow(st, sec));
+    saveState();
+    renderActiveSheet();
+  };
+
+  function syncPrimaryBarUI() {
+    const sec = getActiveSection();
+    const bar = document.getElementById('primary-calc-bar');
+    if (!bar) return;
+    const isPrim = !!getPrimaryCols(sec);
+    bar.classList.toggle('hidden', !isPrim);
+    if (!isPrim) return;
+
+    const cfg = ensurePrimaryConfig(sec);
+    document.getElementById('prim-div1').value = String(cfg.div1 || 3);
+    document.getElementById('prim-div2').value = String(cfg.div2 || 2);
+    document.getElementById('prim-sai-mode').value = cfg.saiMode || 'manual';
+    document.getElementById('prim-final-mode').value = cfg.finalMode || 'custom';
+
+    const divInp = document.getElementById('prim-final-div');
+    if (document.activeElement !== divInp) {
+      divInp.value = formatDigits(cfg.finalDiv || 2);
+    }
+
+    const customWrap = document.getElementById('prim-final-custom-wrap');
+    customWrap.classList.toggle('hidden', cfg.finalMode === 'manual');
+
+    // رسم مربعات اختيار الأعمدة للنتيجة النهائية
+    const colsList = document.getElementById('prim-final-cols-list');
+    colsList.innerHTML = (sec.columns || []).map(c => {
+      const checked = cfg.finalCols.includes(c.id);
+      return `
+        <label class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border cursor-pointer transition ${
+          checked ? 'bg-emerald-600 text-white border-emerald-700' : 'bg-white text-slate-700 border-emerald-200 hover:bg-emerald-100'
+        }">
+          <input type="checkbox" ${checked ? 'checked' : ''} onchange="togglePrimaryFinalCol('${c.id}', this.checked)" class="w-3.5 h-3.5 accent-emerald-700" />
+          <span>${escapeHtml(c.name)}</span>
+        </label>`;
+    }).join('');
+
+    document.querySelectorAll('.grades-table').forEach(tbl => tbl.classList.add('primary-10-cols'));
+  }
+
+  const _origHandleSubScoreInput = window.handleSubScoreInput;
+  window.handleSubScoreInput = function(inputEl) {
+    _origHandleSubScoreInput(inputEl);
+    const sec = getActiveSection();
+    const pCols = getPrimaryCols(sec);
+    if (!pCols) return;
+    const stId = inputEl.dataset.stId;
+    const st = sec.students.find(s => s.id === stId);
+    if (!st) return;
+
+    recalcPrimaryRow(st, sec);
+    saveState();
+
+    const row = document.querySelector(`tr[data-row-st-id="${stId}"]`);
+    if (row) {
+      [pCols.avg1, pCols.avg2, pCols.sai].forEach(col => {
+        const inp = row.querySelector(`input[data-col-id="${col.id}"]`);
+        if (inp && document.activeElement !== inp) {
+          inp.value = formatDigits(st.scores[col.id] || '');
+        }
       });
     }
+    updateRowAndStatsLive(stId);
+  };
 
-    const studentsTab = document.querySelector('#ctrl-tab-students .flex');
-    if (studentsTab && !document.getElementById('btn-open-followup')) {
-      const btn = document.createElement('button');
-      btn.id = 'btn-open-followup';
-      btn.onclick = openFollowupModal;
-      btn.className = 'inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs sm:text-sm font-extrabold shadow-sm transition';
-      btn.innerHTML = '<span>📋 المتابعة اليومية والشفوي</span>';
-      studentsTab.appendChild(btn);
-    }
-  });
+  const _origRenderActiveSheet = window.renderActiveSheet;
+  window.renderActiveSheet = function() {
+    _origRenderActiveSheet();
+    syncPrimaryBarUI();
+  };
 
-  // معادلة المرحلة الابتدائية (السعي والنهائي)
+  // حساب النتيجة النهائية (الدرجة رقماً وكتابةً) حسب اختيار الأستاذ
   const _origComputeStudentResult = window.computeStudentResult;
   window.computeStudentResult = function(student, section) {
-    const cols = section.columns || [];
-    const colM1 = cols.find(c => c.name.includes('المعدل الأول'));
-    const colMid = cols.find(c => c.name.includes('نصف السنة'));
-    const colM2 = cols.find(c => c.name.includes('المعدل الثاني'));
-    const colSai = cols.find(c => c.name.includes('السعي'));
-    const colFinal = cols.find(c => c.name.includes('النهائي'));
+    const pCols = getPrimaryCols(section);
+    if (!pCols) return _origComputeStudentResult(student, section);
 
-    if (!(colM1 && colMid && colM2 && colSai && colFinal)) {
-      return _origComputeStudentResult(student, section);
-    }
-
+    const cfg = ensurePrimaryConfig(section);
     const sc = student.scores || {};
-    const parseNum = (id) => {
-      const v = String(sc[id] || '').trim();
-      if (!v) return null;
-      const n = parseFloat(toWesternDigits(v));
-      return isNaN(n) ? null : n;
-    };
-
-    const v1 = parseNum(colM1.id);
-    const vMid = parseNum(colMid.id);
-    const v2 = parseNum(colM2.id);
-    let vSai = parseNum(colSai.id);
-    const rawFinal = String(sc[colFinal.id] || '').trim();
-    const vFinal = parseNum(colFinal.id);
-
-    if (vSai === null && (v1 !== null || vMid !== null || v2 !== null)) {
-      const parts = [v1, vMid, v2].filter(x => x !== null);
-      vSai = Math.round(parts.reduce((a, b) => a + b, 0) / parts.length);
-    }
 
     let statusType = 'empty';
     let rawNumeric = null;
     let rawDisplay = '';
-    const hasSubValue = (v1 !== null || vMid !== null || v2 !== null || vSai !== null || rawFinal !== '');
+    let isAutoFinal = false;
 
-    if (/^(غ|غائب|غائبة)$/.test(rawFinal)) { rawDisplay = 'غ'; statusType = 'absent'; }
-    else if (/^(م|مؤجل|مؤجلة)$/.test(rawFinal)) { rawDisplay = 'م'; statusType = 'postponed'; }
-    else if (/^(ع|معفى|معفي)$/.test(rawFinal)) { rawDisplay = 'معفى'; statusType = 'exempt'; }
-    else if (vFinal !== null && vSai !== null) {
-      rawNumeric = Math.round((vSai + vFinal) / 2);
-      rawDisplay = String(rawNumeric);
-      statusType = 'numeric';
-    } else if (vFinal !== null) {
-      rawNumeric = vFinal;
-      rawDisplay = String(rawNumeric);
-      statusType = 'numeric';
-    } else if (vSai !== null) {
-      rawNumeric = vSai;
-      rawDisplay = String(rawNumeric);
-      statusType = 'numeric';
-    } else {
-      return _origComputeStudentResult(student, section);
+    if (cfg.finalMode === 'custom' && cfg.finalCols.length > 0) {
+      let sum = 0;
+      let hasAny = false;
+      let statusFound = '';
+
+      for (const colId of cfg.finalCols) {
+        const raw = String(sc[colId] || '').trim();
+        if (!raw) continue;
+        hasAny = true;
+        if (/^(غ|غائب|غائبة)$/.test(raw)) { statusFound = 'غ'; break; }
+        if (/^(م|مؤجل|مؤجلة)$/.test(raw)) { statusFound = 'م'; break; }
+        if (/^(ع|معفى|معفي)$/.test(raw)) { statusFound = 'معفى'; break; }
+        const n = parseFloat(toWesternDigits(raw));
+        if (!isNaN(n)) sum += n;
+      }
+
+      if (hasAny) {
+        isAutoFinal = true;
+        if (statusFound) {
+          rawDisplay = statusFound;
+          statusType = statusFound === 'غ' ? 'absent' : (statusFound === 'م' ? 'postponed' : 'exempt');
+        } else {
+          rawNumeric = Math.round(sum / (cfg.finalDiv || 1));
+          rawDisplay = String(rawNumeric);
+          statusType = 'numeric';
+        }
+      }
+    }
+
+    // إذا كان الوضع يدوياً أو لم تُدخل درجات في الأعمدة المختارة
+    if (!isAutoFinal) {
+      const manual = (student.manualTotal || '').trim();
+      if (manual) {
+        if (/^(غ|غائب|غائبة)$/.test(manual)) { rawDisplay = 'غ'; statusType = 'absent'; }
+        else if (/^(م|مؤجل|مؤجلة)$/.test(manual)) { rawDisplay = 'م'; statusType = 'postponed'; }
+        else if (/^(ع|معفى|معفي)$/.test(manual)) { rawDisplay = 'معفى'; statusType = 'exempt'; }
+        else {
+          const n = parseFloat(toWesternDigits(manual));
+          if (!isNaN(n)) { rawNumeric = Math.round(n * 10) / 10; rawDisplay = String(rawNumeric); statusType = 'numeric'; }
+          else { rawDisplay = manual; }
+        }
+      }
     }
 
     const passMark = typeof section.passingScore === 'number' ? section.passingScore : 50;
@@ -2952,7 +3169,7 @@
 
     const isManualTafqeet = student.manualTafqeet !== null && student.manualTafqeet !== undefined;
     return {
-      hasSubValue,
+      hasSubValue: isAutoFinal,
       rawNumeric,
       effectiveNumeric,
       isDecisionApplied,
@@ -2964,6 +3181,36 @@
       isPass: statusType === 'numeric' && effectiveNumeric >= passMark
     };
   };
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const sheetContainer = document.getElementById('active-sheet-container');
+    const primBar = document.getElementById('primary-calc-bar');
+    if (sheetContainer && primBar) {
+      sheetContainer.parentNode.insertBefore(primBar, sheetContainer);
+    }
+
+    const presetSelect = document.getElementById('inp-column-preset');
+    if (presetSelect) {
+      if (!presetSelect.querySelector('option[value="primary_annual"]')) {
+        const opt = document.createElement('option');
+        opt.value = 'primary_annual';
+        opt.textContent = 'المرحلة الابتدائية الكامل: ش1، ش2، ش3، المعدل ١، نصف السنة، آذار، نيسان، المعدل ٢، السعي، النهائي';
+        presetSelect.insertBefore(opt, presetSelect.firstChild);
+      }
+      presetSelect.addEventListener('change', () => applySelectedColumnPreset());
+    }
+
+    const studentsTab = document.querySelector('#ctrl-tab-students .flex');
+    if (studentsTab && !document.getElementById('btn-open-followup')) {
+      const btn = document.createElement('button');
+      btn.id = 'btn-open-followup';
+      btn.onclick = openFollowupModal;
+      btn.className = 'inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs sm:text-sm font-extrabold shadow-sm transition';
+      btn.innerHTML = '<span>📋 المتابعة اليومية والشفوي</span>';
+      studentsTab.appendChild(btn);
+    }
+    syncPrimaryBarUI();
+  });
 
   /* ------------------------------------------------------------
      2. سجل المتابعة اليومي والشفوي (يدعم الأرقام العربية والحساب الفوري)
@@ -3143,7 +3390,5 @@
     }).join('');
   }
 })();
-</script>
-</html>
 </script>
 </html>
