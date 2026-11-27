@@ -14,7 +14,7 @@
     <!-- خطوط عربية وإنكليزية واضحة ورسمية للطباعة -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&family=Amiri:wght@400;700&family=Cairo:wght@400;600;700;800&family=Changa:wght@400;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=Lateef:wght@400;700&family=Noto+Naskh+Arabic:wght@400;600;700&family=Readex+Pro:wght@400;600;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 
     <!-- مكتبة KaTeX لعرض الكسور والجذور والمعادلات بدقة الطباعة الحقيقية -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
@@ -30,6 +30,12 @@
                         tajawal: ['Tajawal', 'Segoe UI', 'Tahoma', 'Arial', 'sans-serif'],
                         cairo: ['Cairo', 'Segoe UI', 'Tahoma', 'Arial', 'sans-serif'],
                         amiri: ['Amiri', 'Traditional Arabic', 'Times New Roman', 'serif'],
+                        almarai: ['Almarai', 'Cairo', 'Arial', 'sans-serif'],
+                        changa: ['Changa', 'Cairo', 'Arial', 'sans-serif'],
+                        ibmplex: ['IBM Plex Sans Arabic', 'Cairo', 'Arial', 'sans-serif'],
+                        naskh: ['Noto Naskh Arabic', 'Amiri', 'serif'],
+                        readex: ['Readex Pro', 'Cairo', 'sans-serif'],
+                        lateef: ['Lateef', 'Amiri', 'serif'],
                         english: ['Segoe UI', 'Times New Roman', 'Georgia', 'Arial', 'sans-serif']
                     }
                 }
@@ -128,6 +134,151 @@
             outline: 1px solid #000000;
             outline-offset: 3px;
             padding: 22px 26px;
+        }
+
+        /* إطارات مزخرفة للورقة */
+        .sheet-inner.with-border-ornate-classic {
+            border: 2.5px solid #0f172a;
+            outline: 1px solid #0f172a;
+            outline-offset: 4px;
+            padding: 26px 30px;
+            position: relative;
+        }
+        .sheet-inner.with-border-ornate-classic::before,
+        .sheet-inner.with-border-ornate-classic::after {
+            content: '❖';
+            position: absolute;
+            font-size: 16px;
+            color: #0f172a;
+            background: #ffffff;
+            padding: 0 4px;
+            line-height: 1;
+        }
+        .sheet-inner.with-border-ornate-classic::before {
+            top: -9px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .sheet-inner.with-border-ornate-classic::after {
+            bottom: -9px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .sheet-inner.with-border-ornate-islamic {
+            border: 10px solid transparent;
+            border-image: repeating-linear-gradient(45deg, #0f172a 0, #0f172a 4px, #ffffff 4px, #ffffff 8px, #0f172a 8px, #0f172a 10px, #ffffff 10px, #ffffff 14px) 10;
+            box-shadow: inset 0 0 0 1.5px #0f172a;
+            padding: 22px 26px;
+            position: relative;
+        }
+
+        /* خط القص للورقة المقسومة (نموذج أ / نموذج ب) */
+        .split-cut-divider {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 14px 0;
+            width: 100%;
+            color: #334155;
+            user-select: none;
+        }
+        .split-cut-line {
+            flex: 1;
+            border-top: 1.8px dashed #334155;
+            height: 0;
+        }
+        .split-cut-scissors {
+            font-size: 16px;
+            line-height: 1;
+        }
+        .split-half-box {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .split-half-box .exam-q-block {
+            padding-top: 6px !important;
+            padding-bottom: 6px !important;
+        }
+
+        /* رياضيات المرحلة الابتدائية (أرقام وكسور وجذور عربية من اليمين لليسار) */
+        .ar-math-wrap {
+            direction: rtl;
+            unicode-bidi: isolate;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-weight: 700;
+            vertical-align: middle;
+        }
+        .ar-frac {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: middle;
+            margin: 0 3px;
+            line-height: 1.25;
+        }
+        .ar-frac-num {
+            padding: 0 5px 2px;
+            border-bottom: 1.6px solid #000000;
+            text-align: center;
+        }
+        .ar-frac-den {
+            padding: 2px 5px 0;
+            text-align: center;
+        }
+        .ar-root {
+            display: inline-flex;
+            align-items: stretch;
+            direction: rtl;
+            vertical-align: middle;
+            margin: 0 2px;
+        }
+        .ar-root-sign {
+            display: inline-flex;
+            align-items: center;
+            position: relative;
+            font-size: 1.25em;
+            line-height: 1;
+            transform: scaleX(-1);
+            margin-left: -1px;
+        }
+        .ar-root-idx {
+            font-size: 0.62em;
+            font-weight: 800;
+            margin-left: -4px;
+            margin-top: -6px;
+            align-self: flex-start;
+        }
+        .ar-root-body {
+            border-top: 1.6px solid #000000;
+            padding: 1px 5px 0 3px;
+            display: inline-flex;
+            align-items: center;
+        }
+        .ar-matrix-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            direction: rtl;
+        }
+        .ar-matrix-grid {
+            display: inline-grid;
+            gap: 4px 12px;
+            padding: 4px 8px;
+            text-align: center;
+            border-left: 2px solid #000;
+            border-right: 2px solid #000;
+            border-radius: 4px;
+        }
+        .ar-matrix-grid.mat-round {
+            border-radius: 14px;
+        }
+        .ar-matrix-grid.mat-det {
+            border-radius: 0;
         }
 
         .exam-q-block {
@@ -338,8 +489,8 @@
                             <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
                             <span id="autosave-status">تم الحفظ تلقائياً ✓</span>
                         </span>
-                        <span class="hidden sm:inline-flex items-center text-[11px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full border border-slate-700">
-                            مجموع الدرجات: <strong id="total-marks-badge" class="mr-1 text-amber-300">0</strong>
+                        <span class="inline-flex items-center text-[11px] bg-amber-500/20 text-amber-200 px-2.5 py-0.5 rounded-full border border-amber-400/40 font-extrabold">
+                            مجموع الدرجات: <strong id="total-marks-badge" class="mr-1 text-amber-300 text-xs">0</strong>
                         </span>
                     </div>
                 </div>
@@ -381,6 +532,13 @@
                     ورقة جديدة
                 </button>
             </div>
+        </div>
+
+        <!-- شريط التنقل الموحد بين أدوات الحقيبة -->
+        <div class="bg-slate-950/70 border-t border-slate-800 px-3 sm:px-5 py-1.5 flex flex-wrap items-center justify-center sm:justify-start gap-2">
+            <a href="grades.html" class="px-3 py-1 rounded-lg bg-emerald-600/90 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-1">📊 سجل الدرجات</a>
+            <a href="plans.html" class="px-3 py-1 rounded-lg bg-blue-600/90 hover:bg-blue-500 text-white text-xs font-bold transition flex items-center gap-1">📘 الخطة</a>
+            <a href="schedule.html" class="px-3 py-1 rounded-lg bg-indigo-600/90 hover:bg-indigo-500 text-white text-xs font-bold transition flex items-center gap-1">🗓️ الجدول</a>
         </div>
 
         <!-- تبويبات التبديل السريع للموبايل والتابلت -->
@@ -454,6 +612,12 @@
                             <option value="Tajawal">Tajawal (واضح ورسمي)</option>
                             <option value="Cairo">Cairo (حديث وعريض)</option>
                             <option value="Amiri">Amiri (نسخ كلاسيكي)</option>
+                            <option value="Almarai">Almarai (المراعي - أنيق)</option>
+                            <option value="IBM Plex Sans Arabic">IBM Plex (رسمي جداً)</option>
+                            <option value="Noto Naskh Arabic">Noto Naskh (نسخ طباعي)</option>
+                            <option value="Changa">Changa (هندسي واضح)</option>
+                            <option value="Readex Pro">Readex Pro (عصري)</option>
+                            <option value="Lateef">Lateef (تقليدي ناعم)</option>
                             <option value="English">Segoe / Times (مناسب للإنكليزي)</option>
                         </select>
                     </div>
@@ -476,6 +640,8 @@
                             <option value="none">بدون إطار (رسمي)</option>
                             <option value="simple">إطار بسيط</option>
                             <option value="double">إطار مزدوج</option>
+                            <option value="ornate-classic">إطار مزخرف كلاسيكي ❖</option>
+                            <option value="ornate-islamic">إطار مزخرف هندسي</option>
                         </select>
                     </label>
 
@@ -483,6 +649,25 @@
                         <span class="text-xs font-bold text-slate-700">خط فاصل بين الأسئلة</span>
                         <input type="checkbox" id="set-showDividers" onchange="updateSetting('showDividers', this.checked)"
                             class="w-4 h-4 accent-teal-600 rounded cursor-pointer">
+                    </label>
+
+                    <label class="flex items-center justify-between bg-amber-50/70 px-3 py-2 rounded-xl border border-amber-200 cursor-pointer">
+                        <span class="text-xs font-bold text-amber-950">🔢 أرقام وجذور الرياضيات</span>
+                        <select id="set-mathStyle" onchange="updateSetting('mathStyle', this.value)"
+                            class="rounded-lg border border-amber-300 bg-white px-2 py-1 text-xs font-bold text-slate-800 focus:outline-none">
+                            <option value="en">إنكليزي (متوسط / إعدادي)</option>
+                            <option value="ar">عربي (ابتدائي ٠١٢٣ وجذر يمين)</option>
+                        </select>
+                    </label>
+
+                    <label class="flex items-center justify-between bg-sky-50/70 px-3 py-2 rounded-xl border border-sky-200 cursor-pointer">
+                        <span class="text-xs font-bold text-sky-950">✂️ تقسيم الورقة لنموذجين</span>
+                        <select id="set-splitMode" onchange="updateSetting('splitMode', this.value)"
+                            class="rounded-lg border border-sky-300 bg-white px-2 py-1 text-xs font-bold text-slate-800 focus:outline-none">
+                            <option value="none">ورقة كاملة (نموذج واحد)</option>
+                            <option value="duplicate">نموذجان متطابقان (لل قص ✂️)</option>
+                            <option value="ab">نموذج (أ) أعلى + نموذج (ب) أسفل ✂️</option>
+                        </select>
                     </label>
                 </div>
             </div>
@@ -553,10 +738,15 @@
             <!-- ج) قسم الأسئلة والكلايش العلمية الجاهزة -->
             <div class="space-y-3">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-sm font-extrabold text-slate-800 flex items-center gap-2">
-                        <span class="w-2 h-5 rounded-full bg-teal-600 inline-block"></span>
-                        الأسئلة (<span id="questions-count">0</span>)
-                    </h2>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <h2 class="text-sm font-extrabold text-slate-800 flex items-center gap-2">
+                            <span class="w-2 h-5 rounded-full bg-teal-600 inline-block"></span>
+                            الأسئلة (<span id="questions-count">0</span>)
+                        </h2>
+                        <span class="inline-flex items-center text-xs bg-amber-100 text-amber-900 px-2.5 py-0.5 rounded-full border border-amber-300 font-extrabold">
+                            مجموع الدرجات: <strong id="editor-total-marks-badge" class="mr-1 text-amber-700">0</strong>
+                        </span>
+                    </div>
                     <button type="button" onclick="addQuestion()"
                         class="px-3.5 py-2 text-xs font-bold rounded-xl bg-teal-600 hover:bg-teal-700 text-white shadow-sm flex items-center gap-1.5 transition active:scale-95">
                         <span>+ إضافة سؤال</span>
@@ -716,6 +906,10 @@
                 <button type="button" onclick="closeImageModal()"
                     class="px-4 py-2 text-xs font-bold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
                     إغلاق
+                </button>
+                <button type="button" id="share-png-btn" onclick="shareGeneratedPNG()"
+                    class="px-4 py-2 text-xs font-extrabold rounded-xl bg-sky-600 hover:bg-sky-700 text-white shadow-sm transition">
+                    📤 حفظ بالصور / مشاركة (آيفون)
                 </button>
                 <a id="download-png-link" href="#" download="اسئلة_امتحانية.png"
                     class="px-5 py-2 text-xs font-extrabold rounded-xl bg-teal-600 hover:bg-teal-700 text-white shadow-sm transition">
@@ -909,6 +1103,107 @@
                 ]
             },
 
+            // 1.5 المصفوفات (9 أنواع بالعربي للمرحلة الإعدادية)
+            mat_row: {
+                category: 'مصفوفات',
+                title: 'مصفوفة الصف (Row Matrix)',
+                badge: 'مصفوفات',
+                defaults: { name: 'A =', brackets: 'round', rows: '1 2 3' },
+                fields: [
+                    { key: 'name', label: 'اسم المصفوفة (اختياري)', placeholder: 'A =', dir: 'ltr' },
+                    { key: 'brackets', label: 'نوع الأقواس', type: 'select', options: [{ v: 'square', t: '[ ] مربعة' }, { v: 'round', t: '( ) دائرية' }, { v: 'det', t: '| | محددة' }] },
+                    { key: 'rows', label: 'عناصر الصف (افصل بينها بمسافة)', placeholder: '1 2 3', dir: 'ltr', full: true }
+                ]
+            },
+            mat_col: {
+                category: 'مصفوفات',
+                title: 'مصفوفة العمود (Column Matrix)',
+                badge: 'مصفوفات',
+                defaults: { name: 'A =', brackets: 'square', rows: '1\n2\n3' },
+                fields: [
+                    { key: 'name', label: 'اسم المصفوفة (اختياري)', placeholder: 'A =', dir: 'ltr' },
+                    { key: 'brackets', label: 'نوع الأقواس', type: 'select', options: [{ v: 'square', t: '[ ] مربعة' }, { v: 'round', t: '( ) دائرية' }, { v: 'det', t: '| | محددة' }] },
+                    { key: 'rows', label: 'عناصر العمود (كل رقم بسطر)', type: 'textarea', placeholder: '1\n2\n3', dir: 'ltr', full: true }
+                ]
+            },
+            mat_rect: {
+                category: 'مصفوفات',
+                title: 'المصفوفة المستطيلة (2×3)',
+                badge: 'مصفوفات',
+                defaults: { name: 'A =', brackets: 'square', rows: '1 3 4\n2 5 2' },
+                fields: [
+                    { key: 'name', label: 'اسم المصفوفة', placeholder: 'A =', dir: 'ltr' },
+                    { key: 'brackets', label: 'نوع الأقواس', type: 'select', options: [{ v: 'square', t: '[ ] مربعة' }, { v: 'round', t: '( ) دائرية' }, { v: 'det', t: '| | محددة' }] },
+                    { key: 'rows', label: 'الصفوف (كل صف بسطر، والأرقام بمسافة)', type: 'textarea', placeholder: '1 3 4\n2 5 2', dir: 'ltr', full: true }
+                ]
+            },
+            mat_square: {
+                category: 'مصفوفات',
+                title: 'المصفوفة المربعة (3×3)',
+                badge: 'مصفوفات',
+                defaults: { name: 'A =', brackets: 'square', rows: '1 3 4\n5 2 4\n1 9 6' },
+                fields: [
+                    { key: 'name', label: 'اسم المصفوفة', placeholder: 'A =', dir: 'ltr' },
+                    { key: 'brackets', label: 'نوع الأقواس', type: 'select', options: [{ v: 'square', t: '[ ] مربعة' }, { v: 'round', t: '( ) دائرية' }, { v: 'det', t: '| | محددة' }] },
+                    { key: 'rows', label: 'الصفوف (كل صف بسطر، والأرقام بمسافة)', type: 'textarea', placeholder: '1 3 4\n5 2 4\n1 9 6', dir: 'ltr', full: true }
+                ]
+            },
+            mat_zero: {
+                category: 'مصفوفات',
+                title: 'المصفوفة الصفرية',
+                badge: 'مصفوفات',
+                defaults: { name: 'O =', brackets: 'square', rows: '0 0 0\n0 0 0\n0 0 0' },
+                fields: [
+                    { key: 'name', label: 'اسم المصفوفة', placeholder: 'O =', dir: 'ltr' },
+                    { key: 'brackets', label: 'نوع الأقواس', type: 'select', options: [{ v: 'square', t: '[ ] مربعة' }, { v: 'round', t: '( ) دائرية' }, { v: 'det', t: '| | محددة' }] },
+                    { key: 'rows', label: 'الصفوف', type: 'textarea', placeholder: '0 0 0\n0 0 0\n0 0 0', dir: 'ltr', full: true }
+                ]
+            },
+            mat_diag: {
+                category: 'مصفوفات',
+                title: 'المصفوفة القطرية',
+                badge: 'مصفوفات',
+                defaults: { name: 'D =', brackets: 'square', rows: '1 0 0\n0 2 0\n0 0 3' },
+                fields: [
+                    { key: 'name', label: 'اسم المصفوفة', placeholder: 'D =', dir: 'ltr' },
+                    { key: 'brackets', label: 'نوع الأقواس', type: 'select', options: [{ v: 'square', t: '[ ] مربعة' }, { v: 'round', t: '( ) دائرية' }, { v: 'det', t: '| | محددة' }] },
+                    { key: 'rows', label: 'الصفوف', type: 'textarea', placeholder: '1 0 0\n0 2 0\n0 0 3', dir: 'ltr', full: true }
+                ]
+            },
+            mat_scalar: {
+                category: 'مصفوفات',
+                title: 'المصفوفة القياسية',
+                badge: 'مصفوفات',
+                defaults: { name: 'S =', brackets: 'square', rows: '2 0 0\n0 2 0\n0 0 2' },
+                fields: [
+                    { key: 'name', label: 'اسم المصفوفة', placeholder: 'S =', dir: 'ltr' },
+                    { key: 'brackets', label: 'نوع الأقواس', type: 'select', options: [{ v: 'square', t: '[ ] مربعة' }, { v: 'round', t: '( ) دائرية' }, { v: 'det', t: '| | محددة' }] },
+                    { key: 'rows', label: 'الصفوف', type: 'textarea', placeholder: '2 0 0\n0 2 0\n0 0 2', dir: 'ltr', full: true }
+                ]
+            },
+            mat_unit: {
+                category: 'مصفوفات',
+                title: 'مصفوفة الوحدة (I)',
+                badge: 'مصفوفات',
+                defaults: { name: 'I =', brackets: 'square', rows: '1 0 0\n0 1 0\n0 0 1' },
+                fields: [
+                    { key: 'name', label: 'اسم المصفوفة', placeholder: 'I =', dir: 'ltr' },
+                    { key: 'brackets', label: 'نوع الأقواس', type: 'select', options: [{ v: 'square', t: '[ ] مربعة' }, { v: 'round', t: '( ) دائرية' }, { v: 'det', t: '| | محددة' }] },
+                    { key: 'rows', label: 'الصفوف', type: 'textarea', placeholder: '1 0 0\n0 1 0\n0 0 1', dir: 'ltr', full: true }
+                ]
+            },
+            mat_tri: {
+                category: 'مصفوفات',
+                title: 'المصفوفة المثلثية (العليا / السفلى)',
+                badge: 'مصفوفات',
+                defaults: { name: 'T =', brackets: 'square', rows: '5 8 3\n0 1 2\n0 0 7' },
+                fields: [
+                    { key: 'name', label: 'اسم المصفوفة', placeholder: 'T =', dir: 'ltr' },
+                    { key: 'brackets', label: 'نوع الأقواس', type: 'select', options: [{ v: 'square', t: '[ ] مربعة' }, { v: 'round', t: '( ) دائرية' }, { v: 'det', t: '| | محددة' }] },
+                    { key: 'rows', label: 'الصفوف (عدّل الأصفار للعليا أو السفلى)', type: 'textarea', placeholder: '5 8 3\n0 1 2\n0 0 7', dir: 'ltr', full: true }
+                ]
+            },
+
             // 2. الكيمياء
             chem_eq: {
                 category: 'كيمياء',
@@ -1002,7 +1297,9 @@
                     fontFamily: 'Tajawal',
                     numerals: 'arabic',
                     borderStyle: 'none',
-                    showDividers: true
+                    showDividers: true,
+                    mathStyle: 'en',
+                    splitMode: 'none'
                 },
                 freeEditMode: false,
                 freeEditHtml: '',
@@ -1229,8 +1526,11 @@
                     if (qn !== null) total += qn;
                 }
             });
+            const formattedTotal = Number.isInteger(total) ? total : total.toFixed(1);
             const badge = document.getElementById('total-marks-badge');
-            if (badge) badge.textContent = Number.isInteger(total) ? total : total.toFixed(1);
+            if (badge) badge.textContent = formattedTotal;
+            const edBadge = document.getElementById('editor-total-marks-badge');
+            if (edBadge) edBadge.textContent = formattedTotal;
         }
 
         function getPointLabel(idx, style) {
@@ -1483,11 +1783,74 @@
         /**
          * عرض قالب واحد على ورقة الامتحان
          */
+        function toArabicDigitsStr(s) {
+            return String(s || '').replace(/[0-9]/g, d => ARABIC_DIGITS[parseInt(d, 10)]);
+        }
+
+        function renderArabicRootHtml(coef, rad, idx) {
+            const c = escapeHtml(toArabicDigitsStr((coef || '').trim()));
+            const r = escapeHtml(toArabicDigitsStr((rad || '').trim()));
+            if (!r && !c) return '١';
+            if (idx === '0' || !r) return c || r;
+            const idxHtml = idx === '3' ? '<span class="ar-root-idx">٣</span>' : '';
+            return `<span class="ar-math-wrap" style="gap:2px;">${c ? `<span>${c}</span>` : ''}<span class="ar-root">${idxHtml}<span class="ar-root-sign">√</span><span class="ar-root-body">${r}</span></span></span>`;
+        }
+
+        function renderArabicOp(op) {
+            if (op === '\\times') return '×';
+            if (op === '\\div') return '÷';
+            if (op === '-') return '−';
+            return escapeHtml(op || '+');
+        }
+
         function renderTemplateBlockOnSheet(block, blockIndex, totalChemEqs, pointFontPx) {
             const d = block.data || {};
             const t = block.type;
+            const isArMath = state.settings.mathStyle === 'ar';
+
+            // عرض المصفوفات التسعة (عربي أو إنكليزي)
+            if (t.startsWith('mat_')) {
+                const rawRows = (d.rows || '').trim().split(/\r?\n/).map(r => r.trim()).filter(Boolean);
+                const parsedRows = rawRows.map(r => r.split(/\s+/).filter(Boolean));
+                const maxCols = Math.max(1, ...parsedRows.map(r => r.length));
+                const brk = d.brackets || 'square';
+                const nm = (d.name || '').trim();
+
+                if (isArMath) {
+                    const cls = brk === 'round' ? 'mat-round' : (brk === 'det' ? 'mat-det' : '');
+                    const cells = parsedRows.map(r => {
+                        const padded = [...r];
+                        while (padded.length < maxCols) padded.push('');
+                        return padded.map(c => `<span>${escapeHtml(toArabicDigitsStr(c))}</span>`).join('');
+                    }).join('');
+                    return `<div class="my-2 text-center" style="font-size: ${pointFontPx}px;">
+                        <span class="ar-matrix-wrap">
+                            ${nm ? `<span>${escapeHtml(toArabicDigitsStr(nm))}</span>` : ''}
+                            <span class="ar-matrix-grid ${cls}" style="grid-template-columns: repeat(${maxCols}, minmax(22px, auto));">${cells}</span>
+                        </span>
+                    </div>`;
+                } else {
+                    const env = brk === 'round' ? 'pmatrix' : (brk === 'det' ? 'vmatrix' : 'bmatrix');
+                    const texRows = parsedRows.map(r => r.map(c => simpleMathToTex(c)).join(' & ')).join(' \\\\ ');
+                    const tex = `${nm ? simpleMathToTex(nm) + ' ' : ''}\\begin{${env}}${texRows}\\end{${env}}`;
+                    return `<div class="my-2 text-center" style="font-size: ${pointFontPx}px;">${renderKatexSafe(tex)}</div>`;
+                }
+            }
 
             if (t === 'math_frac') {
+                if (isArMath) {
+                    const bef = escapeHtml(toArabicDigitsStr((d.before || '').trim()));
+                    const num = escapeHtml(toArabicDigitsStr((d.num || 'أ').trim()));
+                    const den = escapeHtml(toArabicDigitsStr((d.den || 'ب').trim()));
+                    const aft = escapeHtml(toArabicDigitsStr((d.after || '').trim()));
+                    return `<div class="my-2 text-center" style="font-size: ${pointFontPx}px;">
+                        <span class="ar-math-wrap">
+                            ${bef ? `<span>${bef}</span>` : ''}
+                            <span class="ar-frac"><span class="ar-frac-num">${num}</span><span class="ar-frac-den">${den}</span></span>
+                            ${aft ? `<span>${aft}</span>` : ''}
+                        </span>
+                    </div>`;
+                }
                 const bef = simpleMathToTex(d.before);
                 const num = simpleMathToTex(d.num) || 'a';
                 const den = simpleMathToTex(d.den) || 'b';
@@ -1497,6 +1860,19 @@
             }
 
             if (t === 'math_two_fracs') {
+                if (isArMath) {
+                    const n1 = escapeHtml(toArabicDigitsStr((d.num1 || '').trim()));
+                    const d1 = escapeHtml(toArabicDigitsStr((d.den1 || '').trim()));
+                    const n2 = escapeHtml(toArabicDigitsStr((d.num2 || '').trim()));
+                    const d2 = escapeHtml(toArabicDigitsStr((d.den2 || '').trim()));
+                    return `<div class="my-2 text-center" style="font-size: ${pointFontPx}px;">
+                        <span class="ar-math-wrap">
+                            <span class="ar-frac"><span class="ar-frac-num">${n1}</span><span class="ar-frac-den">${d1}</span></span>
+                            <span>${renderArabicOp(d.op)}</span>
+                            <span class="ar-frac"><span class="ar-frac-num">${n2}</span><span class="ar-frac-den">${d2}</span></span>
+                        </span>
+                    </div>`;
+                }
                 const n1 = simpleMathToTex(d.num1) || 'a';
                 const d1 = simpleMathToTex(d.den1) || 'b';
                 const n2 = simpleMathToTex(d.num2) || 'c';
@@ -1507,6 +1883,19 @@
             }
 
             if (t === 'math_roots_frac') {
+                if (isArMath) {
+                    const top1 = renderArabicRootHtml(d.c1, d.r1, d.idx1);
+                    const bot1 = renderArabicRootHtml(d.c2, d.r2, d.idx2);
+                    const top2 = renderArabicRootHtml(d.c3, d.r3, d.idx3);
+                    const bot2 = renderArabicRootHtml(d.c4, d.r4, d.idx4);
+                    return `<div class="my-2 text-center" style="font-size: ${pointFontPx}px;">
+                        <span class="ar-math-wrap">
+                            <span class="ar-frac"><span class="ar-frac-num">${top1}</span><span class="ar-frac-den">${bot1}</span></span>
+                            <span>${renderArabicOp(d.op)}</span>
+                            <span class="ar-frac"><span class="ar-frac-num">${top2}</span><span class="ar-frac-den">${bot2}</span></span>
+                        </span>
+                    </div>`;
+                }
                 const top1 = buildRootPartTex(d.c1, d.r1, d.idx1);
                 const bot1 = buildRootPartTex(d.c2, d.r2, d.idx2);
                 const top2 = buildRootPartTex(d.c3, d.r3, d.idx3);
@@ -1517,6 +1906,13 @@
             }
 
             if (t === 'math_quad') {
+                if (isArMath) {
+                    let arExpr = escapeHtml(toArabicDigitsStr((d.expr || '').trim()));
+                    arExpr = arExpr.replace(/\^([٠-٩a-zA-Z0-9+-]+)/g, '<sup>$1</sup>');
+                    arExpr = arExpr.replace(/∛([٠-٩a-zA-Z0-9+-]+)/g, '<span class="ar-root"><span class="ar-root-idx">٣</span><span class="ar-root-sign">√</span><span class="ar-root-body">$1</span></span>');
+                    arExpr = arExpr.replace(/√([٠-٩a-zA-Z0-9+-]+)/g, '<span class="ar-root"><span class="ar-root-sign">√</span><span class="ar-root-body">$1</span></span>');
+                    return `<div class="my-1.5 text-center" style="font-size: ${pointFontPx}px;"><span class="ar-math-wrap">${arExpr}</span></div>`;
+                }
                 const tex = simpleMathToTex(d.expr);
                 return `<div class="my-1.5 text-center" style="font-size: ${pointFontPx}px;">${renderKatexSafe(tex)}</div>`;
             }
@@ -1638,6 +2034,8 @@
             document.getElementById('set-numerals').value = s.numerals;
             document.getElementById('set-borderStyle').value = s.borderStyle;
             document.getElementById('set-showDividers').checked = !!s.showDividers;
+            if (document.getElementById('set-mathStyle')) document.getElementById('set-mathStyle').value = s.mathStyle || 'en';
+            if (document.getElementById('set-splitMode')) document.getElementById('set-splitMode').value = s.splitMode || 'none';
 
             document.querySelectorAll('.fontsize-btn').forEach(btn => {
                 const active = btn.dataset.fontsize === s.fontSize;
@@ -1980,6 +2378,7 @@
                         if (!def) return '';
                         const badgeColors = {
                             'رياضيات': 'bg-indigo-100 text-indigo-800',
+                            'مصفوفات': 'bg-purple-100 text-purple-800',
                             'كيمياء': 'bg-emerald-100 text-emerald-800',
                             'فيزياء': 'bg-amber-100 text-amber-900'
                         };
@@ -1995,6 +2394,17 @@
                                             class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500">
                                             ${f.options.map(opt => `<option value="${escapeHtml(opt.v)}" ${val === opt.v ? 'selected' : ''}>${escapeHtml(opt.t)}</option>`).join('')}
                                         </select>
+                                    </div>
+                                `;
+                            }
+                            if (f.type === 'textarea') {
+                                return `
+                                    <div class="${colSpan}">
+                                        <label class="block text-[11px] font-bold text-slate-600 mb-0.5">${f.label}</label>
+                                        <textarea rows="3" dir="${f.dir || 'ltr'}"
+                                            placeholder="${escapeHtml(f.placeholder || '')}"
+                                            oninput="updateTemplateField('${qId}', ${brArg}, '${blk.id}', '${f.key}', this.value)"
+                                            class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500">${escapeHtml(val)}</textarea>
                                     </div>
                                 `;
                             }
@@ -2213,6 +2623,17 @@
                             <option value="math_brackets">ضرب أقواس ( ... )( ... )</option>
                             <option value="math_mapping">أزواج مرتبة / مجموعة { ... }</option>
                             <option value="math_calculus">تكامل / نهاية / مشتقة (للسادس)</option>
+                        </optgroup>
+                        <optgroup label="🧮 المصفوفات (9 أنواع بالعربي للإعدادية)">
+                            <option value="mat_row">1. مصفوفة الصف</option>
+                            <option value="mat_col">2. مصفوفة العمود</option>
+                            <option value="mat_rect">3. المصفوفة المستطيلة (2×3)</option>
+                            <option value="mat_square">4. المصفوفة المربعة (3×3)</option>
+                            <option value="mat_zero">5. المصفوفة الصفرية</option>
+                            <option value="mat_diag">6. المصفوفة القطرية</option>
+                            <option value="mat_scalar">7. المصفوفة القياسية</option>
+                            <option value="mat_unit">8. مصفوفة الوحدة</option>
+                            <option value="mat_tri">9. المصفوفة المثلثية (العليا والسفلى)</option>
                         </optgroup>
                         <optgroup label="🧪 الكيمياء (تتحول الأرقام لسفلية تلقائياً)">
                             <option value="chem_eq">معادلة كيميائية (سهم عادي / تسخين Δ / اتزان ⇌)</option>
@@ -2491,10 +2912,18 @@
             if (s.paperSize === 'a4-compact') sheet.classList.add('size-a4-compact');
             else if (s.paperSize === 'a5') sheet.classList.add('size-a5');
 
-            if (s.fontFamily === 'Amiri') sheet.classList.add('font-amiri');
-            else if (s.fontFamily === 'Cairo') sheet.classList.add('font-cairo');
-            else if (s.fontFamily === 'English') sheet.classList.add('font-english');
-            else sheet.classList.add('font-tajawal');
+            const fontClassMap = {
+                'Amiri': 'font-amiri',
+                'Cairo': 'font-cairo',
+                'Almarai': 'font-almarai',
+                'Changa': 'font-changa',
+                'IBM Plex Sans Arabic': 'font-ibmplex',
+                'Noto Naskh Arabic': 'font-naskh',
+                'Readex Pro': 'font-readex',
+                'Lateef': 'font-lateef',
+                'English': 'font-english'
+            };
+            sheet.classList.add(fontClassMap[s.fontFamily] || 'font-tajawal');
 
             const sizeMap = {
                 small:  { title: 15, point: 14, header: 14 },
@@ -2506,14 +2935,20 @@
             inner.className = 'sheet-inner';
             if (s.borderStyle === 'simple') inner.classList.add('with-border-simple');
             else if (s.borderStyle === 'double') inner.classList.add('with-border-double');
+            else if (s.borderStyle === 'ornate-classic') inner.classList.add('with-border-ornate-classic');
+            else if (s.borderStyle === 'ornate-islamic') inner.classList.add('with-border-ornate-islamic');
 
             syncFreeEditUI();
 
-            // إذا كان وضع التعديل الحر الكامل مفعّلاً ويوجد محتوى معدّل، نعرضه كما هو بكل ألوانه وتعديلاته
-            if (state.freeEditMode && state.freeEditHtml) {
+            // تثبيت تعديلات المعاينة الحرة حتى بعد الخروج من وضع التعديل (تبقى محفوظة لحين ضغط استعادة)
+            if (state.freeEditHtml) {
                 content.innerHTML = state.freeEditHtml;
-                content.setAttribute('contenteditable', 'true');
-                content.setAttribute('spellcheck', 'false');
+                if (state.freeEditMode) {
+                    content.setAttribute('contenteditable', 'true');
+                    content.setAttribute('spellcheck', 'false');
+                } else {
+                    content.removeAttribute('contenteditable');
+                }
                 applyStageScale();
                 return;
             }
@@ -2678,7 +3113,23 @@
                 </div>
             ` : '';
 
-            content.innerHTML = `${headerHtml}${noteHtml}${questionsHtml}${footerHtml}`;
+            const fullBody = `${headerHtml}${noteHtml}${questionsHtml}${footerHtml}`;
+            const splitMode = s.splitMode || 'none';
+            if (splitMode === 'duplicate' || splitMode === 'ab') {
+                const topLabel = splitMode === 'ab' ? `<div class="text-center font-extrabold text-sm mb-1">${en ? 'Model (A)' : 'نموذج (أ)'}</div>` : '';
+                const botLabel = splitMode === 'ab' ? `<div class="text-center font-extrabold text-sm mb-1">${en ? 'Model (B)' : 'نموذج (ب)'}</div>` : '';
+                content.innerHTML = `
+                    <div class="split-half-box">${topLabel}${fullBody}</div>
+                    <div class="split-cut-divider">
+                        <span class="split-cut-line"></span>
+                        <span class="split-cut-scissors">✂️</span>
+                        <span class="split-cut-line"></span>
+                    </div>
+                    <div class="split-half-box">${botLabel}${fullBody}</div>
+                `;
+            } else {
+                content.innerHTML = fullBody;
+            }
             applyStageScale();
         }
 
@@ -2840,6 +3291,9 @@
             }
         }
 
+        let lastGeneratedBlob = null;
+        let lastGeneratedFileName = 'اسئلة_امتحانية.png';
+
         async function exportPNG() {
             if (typeof html2canvas === 'undefined') {
                 showToast('تعذر تحميل مكتبة الصور، تأكد من الاتصال بالإنترنت.', 'error');
@@ -2851,6 +3305,8 @@
                 const canvas = await captureSheetCanvas();
                 const dataUrl = canvas.toDataURL('image/png');
                 const fileName = buildFileName('png');
+                lastGeneratedFileName = fileName;
+                canvas.toBlob(blob => { lastGeneratedBlob = blob; }, 'image/png');
 
                 const imgEl = document.getElementById('generated-exam-img');
                 const dlLink = document.getElementById('download-png-link');
@@ -2869,6 +3325,23 @@
             }
         }
 
+        async function shareGeneratedPNG() {
+            try {
+                if (lastGeneratedBlob && navigator.share) {
+                    const file = new File([lastGeneratedBlob], lastGeneratedFileName, { type: 'image/png' });
+                    if (!navigator.canShare || navigator.canShare({ files: [file] })) {
+                        await navigator.share({ files: [file], title: 'ورقة الأسئلة الامتحانية' });
+                        return;
+                    }
+                }
+                showToast('اضغط مطولاً على الصورة أعلاه ثم اختر (حفظ في الصور) لحفظها بالآيفون.', 'info', 4500);
+            } catch (e) {
+                if (e && e.name !== 'AbortError') {
+                    showToast('اضغط مطولاً على الصورة أعلاه واختر (حفظ في الصور).', 'info', 4000);
+                }
+            }
+        }
+
         function closeImageModal() {
             const modal = document.getElementById('image-preview-modal');
             modal.classList.add('hidden');
@@ -2880,9 +3353,13 @@
             if (window.innerWidth < 1024) {
                 switchMobileTab('preview');
             }
-            setTimeout(() => {
-                try { window.print(); } catch (e) { console.error(e); }
-            }, 120);
+            // استدعاء مباشر بدون تأخير حتى لا يحجبه اختصار الشاشة الرئيسية في الآيفون
+            try {
+                window.print();
+            } catch (e) {
+                console.error(e);
+                showToast('إذا لم تفتح نافذة الطباعة من الاختصار، استخدم زر (حفظ PDF) ثم اطبعه.', 'info', 4500);
+            }
         }
 
         // =========================================================
@@ -3031,7 +3508,10 @@
                 toggleBtn.innerHTML = '<span>✏️ تفعيل التعديل الحر الكامل (نصوص + ألوان)</span>';
                 toggleBtn.className = 'px-3 py-1.5 rounded-xl text-xs font-extrabold border shadow-2xs flex items-center gap-1.5 transition active:scale-95 bg-white hover:bg-teal-50 text-teal-900 border-teal-300';
                 toolbar.classList.add('hidden');
-                if (resetBtn) resetBtn.classList.add('hidden');
+                if (resetBtn) {
+                    if (state.freeEditHtml) resetBtn.classList.remove('hidden');
+                    else resetBtn.classList.add('hidden');
+                }
                 if (sheet) sheet.classList.remove('free-edit-active');
             }
         }
@@ -3059,7 +3539,7 @@
                 content.removeAttribute('contenteditable');
                 saveState();
                 renderSheet();
-                showToast('تم العودة لوضع المحرر القياسي.', 'info', 2800);
+                showToast('تم حفظ وتثبيت تعديلاتك على الورقة! (للعودة للمحرر اضغط استعادة الورقة)', 'success', 3500);
             }
         }
 
@@ -3236,16 +3716,7 @@
   .sci-hint { font-size: 11px; color: #94a3b8; margin-top: 8px; text-align: center; }
 </style>
 
-<a href="grades.html" class="grades-nav-btn" style="position:fixed; top:12px; left:12px; z-index:9999; background:#16a34a; color:#fff; padding:8px 14px; border-radius:8px; text-decoration:none; font-family:inherit; font-weight:bold; font-size:14px; box-shadow:0 2px 6px rgba(0,0,0,0.2);">
-  📊 سجل الدرجات
-</a>
-<a href="plans.html" class="grades-nav-btn" style="position:fixed; top:12px; left:138px; z-index:9999; background:#2563eb; color:#fff; padding:8px 14px; border-radius:8px; text-decoration:none; font-family:inherit; font-weight:bold; font-size:14px; box-shadow:0 2px 6px rgba(0,0,0,0.2);">
-  📘 الخطة
 
-</a>
-<a href="schedule.html" class="grades-nav-btn" style="position:fixed; top:12px; left:222px; z-index:9999; background:#4f46e5; color:#fff; padding:8px 14px; border-radius:8px; text-decoration:none; font-family:inherit; font-weight:bold; font-size:14px; box-shadow:0 2px 6px rgba(0,0,0,0.2);">
-  🗓️ الجدول
-</a>
     
 <button type="button" id="sci-fab" title="لوحة الرموز العلمية">∑ رموز علمية</button>
 
